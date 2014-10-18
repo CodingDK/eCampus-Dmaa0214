@@ -66,13 +66,12 @@ public class SPGUI extends JPanel {
 		setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
 				ColumnSpec.decode("265px:grow"),
-				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
 				ColumnSpec.decode("175px:grow"),
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,},
 			new RowSpec[] {
 				RowSpec.decode("52px"),
 				FormFactory.LINE_GAP_ROWSPEC,
-				RowSpec.decode("26px:grow"),
+				RowSpec.decode("26px"),
 				FormFactory.RELATED_GAP_ROWSPEC,
 				RowSpec.decode("26px"),
 				FormFactory.LINE_GAP_ROWSPEC,
@@ -108,10 +107,10 @@ public class SPGUI extends JPanel {
 		txtPass.setColumns(10);
 		
 		JPanel panel = new JPanel();
-		add(panel, "4, 1, fill, fill");
+		add(panel, "3, 1, fill, fill");
 		
 		JPanel panel_6 = new JPanel();
-		add(panel_6, "2, 3, 3, 1, fill, fill");
+		add(panel_6, "2, 3, 2, 1, fill, fill");
 		panel_6.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.DEFAULT_COLSPEC,
 				FormFactory.RELATED_GAP_COLSPEC,
@@ -138,7 +137,7 @@ public class SPGUI extends JPanel {
 		panel_6.add(btnBrowser, "5, 1");
 		
 		JPanel panel_2 = new JPanel();
-		add(panel_2, "2, 5, 3, 1, fill, fill");
+		add(panel_2, "2, 5, 2, 1, fill, fill");
 		panel_2.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.DEFAULT_COLSPEC,
 				FormFactory.RELATED_GAP_COLSPEC,
@@ -155,14 +154,8 @@ public class SPGUI extends JPanel {
 		
 		txtSPPath = new JTextField();
 		txtSPPath.setText("2. Semester/ITIO");
-		panel_2.add(txtSPPath, "3, 1, fill, default");
+		panel_2.add(txtSPPath, "3, 1, 5, 1, fill, default");
 		txtSPPath.setColumns(10);
-		
-		JComboBox cmbFirstPath = new JComboBox();
-		panel_2.add(cmbFirstPath, "5, 1, fill, default");
-		
-		JComboBox cmnSecondPath = new JComboBox();
-		panel_2.add(cmnSecondPath, "7, 1, fill, default");
 		
 		JScrollPane scrollPane = new JScrollPane();
 		add(scrollPane, "2, 7, fill, fill");
@@ -175,12 +168,11 @@ public class SPGUI extends JPanel {
 		scrollPane.setViewportView(tree);
 		
 		JPanel panel_3 = new JPanel();
-		add(panel_3, "4, 7, fill, fill");
+		add(panel_3, "3, 7, fill, fill");
 		panel_3.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
 				ColumnSpec.decode("default:grow"),},
 			new RowSpec[] {
-				FormFactory.RELATED_GAP_ROWSPEC,
 				RowSpec.decode("max(39dlu;default)"),
 				FormFactory.RELATED_GAP_ROWSPEC,
 				RowSpec.decode("default:grow"),
@@ -188,7 +180,7 @@ public class SPGUI extends JPanel {
 		
 		JPanel panel_5 = new JPanel();
 		panel_5.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panel_3.add(panel_5, "2, 2, fill, fill");
+		panel_3.add(panel_5, "2, 1, fill, fill");
 		panel_5.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
 				FormFactory.GROWING_BUTTON_COLSPEC,
@@ -230,7 +222,7 @@ public class SPGUI extends JPanel {
 		panel_7.add(chkMD5, "2, 1");
 		
 		JPanel panel_4 = new JPanel();
-		panel_3.add(panel_4, "2, 4, fill, fill");
+		panel_3.add(panel_4, "2, 3, fill, fill");
 
 	}
 
