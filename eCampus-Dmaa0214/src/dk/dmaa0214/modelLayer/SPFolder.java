@@ -23,6 +23,7 @@ public class SPFolder{
 		this.addedBy = addedBy;
 		setChangedTime(changedTime);
 		this.parent = parent;
+		children = new ArrayList<Object>();
 	}
 	
 	public SPFolder(String beforePath) {
