@@ -178,4 +178,13 @@ public class SPFolder{
 		}
 	}
 	
+	public boolean isEmpty(){
+		boolean empty = false;
+		if(children.size() == 0){
+			empty = true;
+		}
+		
+		return empty;
+	}
+	
 }

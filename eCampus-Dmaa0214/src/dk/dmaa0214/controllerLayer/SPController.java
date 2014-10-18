@@ -13,6 +13,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 import com.gargoylesoftware.htmlunit.DefaultCredentialsProvider;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
@@ -66,31 +67,18 @@ public class SPController {
         //credentialProvider.addNTLMCredentials(“username”, “mypasword”, null, -1, “localhost”, “mydomain”);
 	    HtmlPage page = webClient.getPage(siteURL + sitePath);
 	    getFilesOnPage(page, null);
-	    /*
-	    while(!folders.isEmpty()) {
-	    	String path = folders.get(0);
-	    	if(path != null) {
-	    		page = webClient.getPage(siteURL+ path);
-	    		getFilesOnPage(page, root);
-	    	}
-	    	folders.remove(0);
-	    }
-	    */
+	    
+	    //ListIterator<SPFolder> it = (ListIterator<SPFolder>) root.getChildNodes();
+	    
 	    if(root.getChildNodes().size() > 0){
 	    	ArrayList<SPFolder> exists = new ArrayList<SPFolder>();
 	    	
 		    for(Object s : root.getChildNodes()){
 		    	System.out.println(s.getClass().getName());
 		    	if(s instanceof SPFolder){
-		    		SPFolder existsFolder = doStuff((SPFolder)s);
-					if(existsFolder != null){
-						exists.add(existsFolder);
-					}
+		    		doStuff((SPFolder)s);
 		    	}
 		    }
-		    if(exists.size() > 0){
-				root.removeAllChild(exists);
-			}
 	    }
 	    
 	    long endTime   = System.currentTimeMillis();
@@ -106,8 +94,8 @@ public class SPController {
 	    
 	    return root;
 	}
-
-	private SPFolder doStuff(SPFolder s) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
+	
+	private void doStuff(SPFolder s) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
 		SPFolder localExists = null;
 		System.out.println(s.getPath());
 		HtmlPage page = webClient.getPage(siteURL + s.getPath());
@@ -118,21 +106,11 @@ public class SPController {
 			System.out.println("-----------");
 			for(Object child : children){
 				if(child instanceof SPFolder){
-					SPFolder existsFolder = doStuff((SPFolder)child);
-					if(existsFolder != null){
-						exists.add(existsFolder);
-					}
+					doStuff((SPFolder)child);
 				}
 			}
-			if(exists.size() > 0){
-				s.removeAllChild(exists);
-			}
 			System.out.println("-----------");
-		}else if(hasLocalFile(s.getPath().substring(sitePath.length()))){
-			localExists = s;
 		}
-		
-		return localExists;
 	}
 
 	private void getFilesOnPage(HtmlPage page, SPFolder parent) throws UnsupportedEncodingException {
