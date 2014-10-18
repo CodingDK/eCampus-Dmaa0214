@@ -2,9 +2,12 @@ package dk.dmaa0214.modelLayer;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
-public class SPFile {
+public class SPFolder{
+	private ArrayList<Object> children;
+
 	private String name;
 	private String type;
 	private String beforePath;
@@ -20,17 +23,21 @@ public class SPFile {
 	 * @param changedTime
 	 * @param addedBy
 	 */
-	public SPFile(String name, String type, String path, String changedTime,
+	public SPFolder(String name, String type, String path, String changedTime,
 			String addedBy) {
 		this.name = name;
 		this.type = type;
 		this.path = path;
 		setChangedTime(changedTime);
 		this.addedBy = addedBy;
+		
+		children = new ArrayList<Object>();
 	}
 	
-	public SPFile(String beforePath) {
+	public SPFolder(String beforePath) {
 		this.beforePath = beforePath;
+		
+		children = new ArrayList<Object>();
 	}
 
 	/**
@@ -135,6 +142,14 @@ public class SPFile {
 		return name;
 	}
 	
+	public void addChild(Object sp){
+		children.add(sp);
+	}
+	
+	public ArrayList<Object> getChildNodes(){
+		return children;
+	}
+
 	/**
 	 * @return the parent
 	 */
@@ -148,4 +163,19 @@ public class SPFile {
 	public void setParent(SPFolder parent) {
 		this.parent = parent;
 	}
+	
+	public void removeChild(Object obj){
+		children.remove(obj);
+		if(children.size() == 0){
+			parent.removeChild(this);
+		}
+	}
+
+	public void removeAllChild(ArrayList<SPFolder> exists) {
+		children.removeAll(exists);
+		if(children.size() == 0){
+			parent.removeChild(this);
+		}
+	}
+	
 }
