@@ -158,7 +158,9 @@ public class SPFolder{
 	public void removeChild(Object obj){
 		children.remove(obj);
 		if(children.size() == 0){
-			parent.removeChild(this);
+			if(parent != null){
+				parent.removeChild(this);
+			}
 		}
 	}
 	
