@@ -253,6 +253,7 @@ public class SPGUI extends JPanel {
 			reloadTree();
 		} catch (NullPointerException e) {
 			showErrorDialog(e.getMessage());
+			e.printStackTrace();
 		} catch (FailingHttpStatusCodeException e) {
 			showErrorDialog(e.getMessage());
 			e.printStackTrace();

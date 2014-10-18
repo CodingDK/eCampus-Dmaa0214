@@ -12,6 +12,7 @@ import java.net.URLDecoder;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -217,26 +218,40 @@ public class SPController {
 		if (selectedList.size() == 0) {
 			throw new NullPointerException("Du skal vælge nogle filer først");
 		}
-		for (Object f : selectedList) {
-			downloadFile(f);
-			if(f instanceof SPFolder){
-				((SPFolder) f).getParent().removeChild(f);
-			}else if(f instanceof SPFile){
-				((SPFile) f).getParent().removeChild(f);
+		
+		HashSet<SPFile> dlList = new HashSet<SPFile>();
+		System.out.println("before while");
+		while(selectedList.size() != 0) {
+			System.out.println("list size: " + selectedList.size());
+			Object obj = selectedList.get(0);
+			if(obj instanceof SPFolder){
+				for(Object objA : ((SPFolder) obj).getChildNodes()){
+					System.out.println("forloop: " + objA);
+					if (!selectedList.contains(objA)) {
+						System.out.println("forloop if:" + objA);
+						selectedList.add(objA);
+					}
+				}
+				((SPFolder) obj).getParent().removeChild(obj);
+			}else if(obj instanceof SPFile){
+				System.out.println("added: " + obj);
+				dlList.add((SPFile) obj);
+				((SPFile) obj).getParent().removeChild(obj);
 			}
+			selectedList.remove(obj);
 		}
+		System.out.println("after while");
+		
+		for(SPFile f : dlList) {
+			downloadFile(f);
+		}
+		
+		
 	}
 	
-	public void downloadFile(Object spFile) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
-		String shortPath = "";
-		String path = "";
-		if(spFile instanceof SPFolder){
-			shortPath = ((SPFolder) spFile).getShortPath();
-			path = ((SPFolder) spFile).getPath();
-		}else if(spFile instanceof SPFile){
-			shortPath = ((SPFile) spFile).getShortPath();
-			path = ((SPFile) spFile).getPath();
-		}
+	public void downloadFile(SPFile spFile) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
+		String shortPath = spFile.getShortPath();
+		String path = spFile.getPath();	
 		
 		if(siteURL == null) {
 			throw new NullPointerException("Du skal sammenligne filer først");
