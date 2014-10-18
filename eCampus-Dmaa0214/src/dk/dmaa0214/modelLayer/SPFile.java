@@ -16,7 +16,7 @@ public class SPFile {
 	public SPFile(String beforePath, String name, String path, String addedBy, String changedTime, SPFolder parent){
 		this.beforePath = beforePath;
 		this.name = name;
-		this.path = path;
+		setPathAndType(path);
 		this.addedBy = addedBy;
 		setChangedTime(changedTime);
 		this.parent = parent;
