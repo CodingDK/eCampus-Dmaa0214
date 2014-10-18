@@ -31,6 +31,7 @@ public class SPFile {
 	
 	public SPFile(String beforePath) {
 		this.beforePath = beforePath;
+		this.type = "";
 	}
 
 	/**
@@ -85,8 +86,13 @@ public class SPFile {
 	/**
 	 * @param path the path to set
 	 */
-	public void setPath(String path) {
+	public void setPathAndType(String path) {
 		this.path = path;
+		if (path != null && path.lastIndexOf(".") != -1) {
+			this.type = path.substring(path.lastIndexOf("."));
+		} else {
+			this.type = "";
+		}
 	}
 	
 	/**

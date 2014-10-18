@@ -1,21 +1,14 @@
 package dk.dmaa0214.guiLayer;
 
 import javax.swing.JPanel;
-
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
-
 import javax.swing.JTree;
 
-import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
 
 import javax.swing.JScrollPane;
 
@@ -26,28 +19,30 @@ import com.jgoodies.forms.layout.RowSpec;
 import com.jgoodies.forms.factories.FormFactory;
 
 import dk.dmaa0214.controllerLayer.SPController;
+import dk.dmaa0214.guiLayer.extensions.FileTreeCellRenderer;
 import dk.dmaa0214.guiLayer.extensions.FileTreeModel;
-import dk.dmaa0214.modelLayer.SPFile;
-import dk.dmaa0214.modelLayer.SPFileCont;
 import dk.dmaa0214.modelLayer.SPFolder;
 
+import javax.swing.Icon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.JComboBox;
-import javax.swing.border.BevelBorder;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
+import javax.swing.filechooser.FileSystemView;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreePath;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 
 public class SPGUI extends JPanel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JTextField txtUser;
 	private JTextField txtPass;
 	private JTextField txtLocalPath;
@@ -55,7 +50,6 @@ public class SPGUI extends JPanel {
 	private String siteURL;
 	private String sitePath;
 	private SPController spCtr;
-	private SPFileCont spfileCont;
 	private JTree tree;
 	private FileTreeModel model;
 	private SPFolder root;
@@ -177,6 +171,7 @@ public class SPGUI extends JPanel {
 		
 		tree = new JTree(model);
 		tree.setRootVisible(false);
+		tree.setCellRenderer(new FileTreeCellRenderer());  
 		scrollPane.setViewportView(tree);
 		
 		JPanel panel_3 = new JPanel();
@@ -325,11 +320,12 @@ public class SPGUI extends JPanel {
             tree.expandRow(i);
         }
     }
-    
-    private void reloadTree(){
+
+	private void reloadTree(){
     	model = new FileTreeModel(root);
-		tree.setModel(model);
+    	tree.setModel(model);
 		expandAllNodes();
+		
     }
 
 }

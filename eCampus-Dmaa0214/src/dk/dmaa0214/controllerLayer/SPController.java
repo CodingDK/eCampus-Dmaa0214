@@ -168,7 +168,7 @@ public class SPController {
 	    			}else if(!hasLocalFile(href.substring(sitePath.length()))){
 	    				SPFile spFile = new SPFile(sitePath);
 	    				spFile.setName(name);
-	    				spFile.setPath(href);
+	    				spFile.setPathAndType(href);
 	    				spFile.setChangedTime(changedTime);
 	    				spFile.setAddedBy(addedBy);
 	    				spFile.setParent(parent);

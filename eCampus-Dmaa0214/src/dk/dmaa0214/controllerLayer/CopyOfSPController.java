@@ -113,7 +113,7 @@ public class CopyOfSPController {
 	    				else {
 	    					//System.out.println("else: " + href);
 		    				//System.out.println("----");
-	    					spFile.setPath(href);		    	    		
+	    					spFile.setPathAndType(href);		    	    		
 	    				}
 	    			}
 	    			else if (cellClassAtt.equals("ms-vb2")) {

@@ -1,12 +1,9 @@
 package dk.dmaa0214.guiLayer.extensions;
 
-import java.util.ArrayList;
-
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
-import dk.dmaa0214.modelLayer.SPFile;
 import dk.dmaa0214.modelLayer.SPFolder;
 
 public class FileTreeModel implements TreeModel{
