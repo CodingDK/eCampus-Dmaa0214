@@ -32,5 +32,17 @@ public class SPFileCont {
 	public void remove(SPFile f) {
 		files.remove(f);
 	}
+	
+	public boolean hasFolderFile(SPFolder spFoler) {
+		int i = 0;
+		boolean found = false;
+		while(i < files.size() && !found) {
+			if(files.get(i).getParent().equals(spFoler)) {
+				found = true;
+			}
+			i++;
+		}
+		return true;
+	}
 
 }

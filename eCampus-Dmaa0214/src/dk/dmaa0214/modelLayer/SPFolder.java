@@ -15,6 +15,7 @@ public class SPFolder{
 	private Long changedTime;
 	private String addedBy;
 	private SPFolder parent;
+	private boolean rootFolder;
 	
 	/**
 	 * @param name
@@ -30,14 +31,14 @@ public class SPFolder{
 		this.path = path;
 		setChangedTime(changedTime);
 		this.addedBy = addedBy;
-		
+		this.rootFolder = false;
 		children = new ArrayList<Object>();
 	}
 	
 	public SPFolder(String beforePath) {
 		this.beforePath = beforePath;
-		
 		children = new ArrayList<Object>();
+		this.rootFolder = true;
 	}
 
 	/**
@@ -166,16 +167,45 @@ public class SPFolder{
 	
 	public void removeChild(Object obj){
 		children.remove(obj);
-		if(children.size() == 0){
+		if(children.size() == 0 && (obj instanceof SPFolder && !((SPFolder) obj).getRootFolder())){
+			
 			parent.removeChild(this);
 		}
 	}
 
+	public boolean getRootFolder() {
+		return rootFolder;
+	}
+	
 	public void removeAllChild(ArrayList<SPFolder> exists) {
 		children.removeAll(exists);
 		if(children.size() == 0){
 			parent.removeChild(this);
 		}
+	}
+	
+	public ArrayList<SPFolder> getSubfolders() {
+		ArrayList<SPFolder> tempList = new ArrayList<SPFolder>();
+		for (Object o : children) {
+			if(o instanceof SPFolder) {
+				tempList.add((SPFolder) o);
+			}
+		}
+		return tempList;
+	}
+	
+	public boolean isEmptyForFiles() {
+		boolean empty = isEmpty();
+		if(!empty) {
+			empty = true;
+			for(Object o : children) {
+				if(o instanceof SPFile) {
+					empty = false;
+				}
+			}
+		}
+		return empty;
+		
 	}
 	
 	public boolean isEmpty(){

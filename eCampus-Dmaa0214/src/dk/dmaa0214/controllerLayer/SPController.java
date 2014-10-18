@@ -50,8 +50,6 @@ public class SPController {
 		System.out.println("start Controller");
 		long startTime = System.currentTimeMillis();
 		
-		spFileCon = SPFileCont.getInstance();
-		spFileCon.getFiles().clear();
 		this.localPath = localPath;
 		//localPath = "D:/SkyDrive/UCN/Software konstruktion/Databaser";
 		this.siteURL = siteURL;
@@ -67,17 +65,22 @@ public class SPController {
 		credentialProvider.addNTLMCredentials(user, pass, null, -1, "localhost", "UCN");
         //credentialProvider.addNTLMCredentials(“username”, “mypasword”, null, -1, “localhost”, “mydomain”);
 	    HtmlPage page = webClient.getPage(siteURL + sitePath);
-	    getFilesOnPage(page, null);
+	    getFilesOnPage(page, root);
 	    
 	    //ListIterator<SPFolder> it = (ListIterator<SPFolder>) root.getChildNodes();
-	    
+	    System.out.println("rootsize:" + root.getChildNodes().size());
 	    if(root.getChildNodes().size() > 0){
-	    	ArrayList<SPFolder> exists = new ArrayList<SPFolder>();
+	    	
+	    	//checkSubFoldes(root);
 	    	
 		    for(Object s : root.getChildNodes()){
 		    	System.out.println(s.getClass().getName());
 		    	if(s instanceof SPFolder){
 		    		doStuff((SPFolder)s);
+
+			    	if(isFoldersEmpty((SPFolder)s)) {
+			    		((SPFolder)s).getParent().removeChild(s);
+			    	}
 		    	}
 		    }
 	    }
@@ -85,37 +88,77 @@ public class SPController {
 	    long endTime   = System.currentTimeMillis();
 	    System.out.println("Files: " + counter);
 	    NumberFormat formatter = new DecimalFormat("#0.00000");
-	   // System.out.println("Execution time is " + formatter.format((endTime - startTime) / 1000d) + " seconds");
+	    //System.out.println("Execution time is " + formatter.format((endTime - startTime) / 1000d) + " seconds");
 	    //for(SPFile f : fileCon.getFiles()) {
 	    //	System.out.println(f.getShortPath());
 	    	//downloadFile(f);
 	   // }
 	    endTime = System.currentTimeMillis();
 	    System.out.println("Execution time is " + formatter.format((endTime - startTime) / 1000d) + " seconds");
-	    
+	    System.out.println("rootsize end:" + root.getChildNodes().size());
 	    return root;
 	}
 	
 	private void doStuff(SPFolder s) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
-		SPFolder localExists = null;
 		System.out.println(s.getPath());
 		HtmlPage page = webClient.getPage(siteURL + s.getPath());
 		getFilesOnPage(page, s);
 		ArrayList<Object> children = s.getChildNodes();
+		System.out.println("size: " + children.size());
 		if(children.size() > 0){
-			ArrayList<SPFolder> exists = new ArrayList<SPFolder>();
 			System.out.println("-----------");
 			for(Object child : children){
 				if(child instanceof SPFolder){
 					doStuff((SPFolder)child);
+					if(isFoldersEmpty((SPFolder)child)) {
+			    		((SPFolder)child).getParent().removeChild(child);
+			    	}
 				}
 			}
+			
 			System.out.println("-----------");
 		}
 	}
+	
 
-	private void getFilesOnPage(HtmlPage page, SPFolder parent) throws UnsupportedEncodingException {
+	/*
+	private void checkSubFoldes(SPFolder spFolder) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
+		// TODO Auto-generated method stub
 		
+		ArrayList<Object> selectedList = new ArrayList<Object>(spFolder.getChildNodes());
+		System.out.println("CheckStartsize: " +spFolder.getChildNodes().size());
+		while(selectedList.size() != 0) {
+			boolean empty = true;
+			Object obj = selectedList.get(0);
+			
+			if(obj instanceof SPFolder){
+				//System.out.println("if" + obj);
+				SPFolder objFolder = (SPFolder) obj;
+			
+				HtmlPage page = webClient.getPage(siteURL + objFolder.getPath());
+				
+				int i = getFilesOnPage(page, objFolder);
+				if(objFolder.getChildNodes().size() != 0) {
+					System.out.println("parent: " + ((SPFolder) obj).getParent() + ", folder: " + obj + ", size: " + ((SPFolder) obj).getChildNodes().size() + ", i: "+ i);					
+					for(Object s : objFolder.getChildNodes()) {
+						if(s instanceof SPFolder){
+							System.out.println("if3" + ((SPFolder) s).getShortPath());
+							selectedList.add(s);
+						}
+					}
+				} else {
+					objFolder.getParent().removeChild(objFolder);
+				}
+			}
+			selectedList.remove(0);
+		}
+		System.out.println("CheckENDsize: " +spFolder.getChildNodes().size());
+		
+	}
+	*/
+
+	private int getFilesOnPage(HtmlPage page, SPFolder parent) throws UnsupportedEncodingException {
+		int retInt = 0;
 		if(parent == null){
 			parent = root;
 		}
@@ -165,6 +208,7 @@ public class SPController {
 	    				spFolder.setChangedTime(changedTime);
 	    				spFolder.setParent(parent);
 		    			parent.addChild(spFolder);
+		    		
 	    			}else if(!hasLocalFile(href.substring(sitePath.length()))){
 	    				SPFile spFile = new SPFile(sitePath);
 	    				spFile.setName(name);
@@ -173,11 +217,13 @@ public class SPController {
 	    				spFile.setAddedBy(addedBy);
 	    				spFile.setParent(parent);
 	    				parent.addChild(spFile);
+		    			retInt++;
 	    			}
 	    			counter++;
 				}
 	    	}
 	    }
+	    return retInt;
 	}
 
 	private boolean hasLocalFile(String path) {
@@ -213,7 +259,7 @@ public class SPController {
 		
 		return retVal;
 	}
-	
+		
 	public void downloadFiles(List<Object> selectedList) throws NullPointerException, FailingHttpStatusCodeException, MalformedURLException, IOException {
 		if (selectedList.size() == 0) {
 			throw new NullPointerException("Du skal vælge nogle filer først");
@@ -247,6 +293,25 @@ public class SPController {
 		}
 		
 		
+	}
+	
+	public boolean isFoldersEmpty(SPFolder obj) {
+		boolean retVal = false;
+		if (obj.isEmptyForFiles()) {
+			retVal = true;
+		}
+		else {
+			ArrayList<SPFolder> tempList = obj.getSubfolders();
+			if (tempList.size() != 0) {
+				int i = 0;
+				while (i < tempList.size() && !retVal) {
+					retVal = isFoldersEmpty(tempList.get(i));
+					i++;
+				}
+			
+			}	
+		}
+		return retVal;
 	}
 	
 	public void downloadFile(SPFile spFile) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
