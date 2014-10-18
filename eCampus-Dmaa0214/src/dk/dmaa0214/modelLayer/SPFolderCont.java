@@ -2,18 +2,18 @@ package dk.dmaa0214.modelLayer;
 
 import java.util.ArrayList;
 
-public class SPFileCont {
+public class SPFolderCont {
 
-	private static SPFileCont instance = null;
-	private ArrayList<SPFile> files;
+	private static SPFolderCont instance = null;
+	private ArrayList<SPFolder> files;
 	
-	private SPFileCont() {
-		files = new ArrayList<SPFile>();
+	private SPFolderCont() {
+		files = new ArrayList<SPFolder>();
 	}
 	
-	public static SPFileCont getInstance() {
+	public static SPFolderCont getInstance() {
 		if(instance == null) {
-			instance = new SPFileCont();
+			instance = new SPFolderCont();
 		}
 		return instance;
 	}
@@ -21,15 +21,15 @@ public class SPFileCont {
 	/**
 	 * @return the files
 	 */
-	public ArrayList<SPFile> getFiles() {
+	public ArrayList<SPFolder> getFiles() {
 		return files;
 	}
 	
-	public void addFile(SPFile file) {
+	public void addFile(SPFolder file) {
 		files.add(file);
 	}
 
-	public void remove(SPFile f) {
+	public void remove(SPFolder f) {
 		files.remove(f);
 	}
 	

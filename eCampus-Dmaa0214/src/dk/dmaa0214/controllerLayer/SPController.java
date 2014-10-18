@@ -26,14 +26,14 @@ import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
 import com.gargoylesoftware.htmlunit.html.HtmlTableRow;
 
 import dk.dmaa0214.modelLayer.SPFile;
-import dk.dmaa0214.modelLayer.SPFileCont;
 import dk.dmaa0214.modelLayer.SPFolder;
+import dk.dmaa0214.modelLayer.SPFolderCont;
 
 
 public class SPController {
 
 	private SPFolder root;
-	private SPFileCont spFileCon;
+	private SPFolderCont spFolderCont;
 	private String siteURL;
 	private String sitePath;
 	private String localPath;
@@ -46,6 +46,8 @@ public class SPController {
 	}
 	
 	public SPFolder getConnectedToSP(String user, String pass, String localPath, String siteURL, String sitePath, boolean checkMD5) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
+		spFolderCont = SPFolderCont.getInstance();
+		
 		this.checkMD5 = checkMD5;
 		System.out.println("start Controller");
 		long startTime = System.currentTimeMillis();
@@ -67,20 +69,12 @@ public class SPController {
 	    HtmlPage page = webClient.getPage(siteURL + sitePath);
 	    getFilesOnPage(page, root);
 	    
-	    //ListIterator<SPFolder> it = (ListIterator<SPFolder>) root.getChildNodes();
 	    System.out.println("rootsize:" + root.getChildNodes().size());
 	    if(root.getChildNodes().size() > 0){
-	    	
-	    	//checkSubFoldes(root);
-	    	
 		    for(Object s : root.getChildNodes()){
 		    	System.out.println(s.getClass().getName());
 		    	if(s instanceof SPFolder){
-		    		doStuff((SPFolder)s);
-
-			    	if(isFoldersEmpty((SPFolder)s)) {
-			    		((SPFolder)s).getParent().removeChild(s);
-			    	}
+		    		getChildren((SPFolder)s);
 		    	}
 		    }
 	    }
@@ -88,18 +82,26 @@ public class SPController {
 	    long endTime   = System.currentTimeMillis();
 	    System.out.println("Files: " + counter);
 	    NumberFormat formatter = new DecimalFormat("#0.00000");
-	    //System.out.println("Execution time is " + formatter.format((endTime - startTime) / 1000d) + " seconds");
-	    //for(SPFile f : fileCon.getFiles()) {
-	    //	System.out.println(f.getShortPath());
-	    	//downloadFile(f);
-	   // }
 	    endTime = System.currentTimeMillis();
 	    System.out.println("Execution time is " + formatter.format((endTime - startTime) / 1000d) + " seconds");
 	    System.out.println("rootsize end:" + root.getChildNodes().size());
+	    
+	    removeEmptyFolders();
+	    
 	    return root;
 	}
 	
-	private void doStuff(SPFolder s) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
+	private void removeEmptyFolders() {
+		ArrayList<SPFolder> folders = spFolderCont.getFiles();
+	    for(SPFolder sp : folders){
+	    	if(sp.isEmpty()){
+	    		sp.getParent().removeChild(sp);
+	    	}
+	    }
+	}
+
+	private void getChildren(SPFolder s) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
+		spFolderCont.addFile(s);
 		System.out.println(s.getPath());
 		HtmlPage page = webClient.getPage(siteURL + s.getPath());
 		getFilesOnPage(page, s);
@@ -109,53 +111,16 @@ public class SPController {
 			System.out.println("-----------");
 			for(Object child : children){
 				if(child instanceof SPFolder){
-					doStuff((SPFolder)child);
-					if(isFoldersEmpty((SPFolder)child)) {
-			    		((SPFolder)child).getParent().removeChild(child);
-			    	}
+					getChildren((SPFolder)child);
+					//if(isFoldersEmpty((SPFolder)child)) {
+			    	//	((SPFolder)child).getParent().removeChild(child);
+			    	//}
 				}
 			}
 			
 			System.out.println("-----------");
 		}
 	}
-	
-
-	/*
-	private void checkSubFoldes(SPFolder spFolder) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
-		// TODO Auto-generated method stub
-		
-		ArrayList<Object> selectedList = new ArrayList<Object>(spFolder.getChildNodes());
-		System.out.println("CheckStartsize: " +spFolder.getChildNodes().size());
-		while(selectedList.size() != 0) {
-			boolean empty = true;
-			Object obj = selectedList.get(0);
-			
-			if(obj instanceof SPFolder){
-				//System.out.println("if" + obj);
-				SPFolder objFolder = (SPFolder) obj;
-			
-				HtmlPage page = webClient.getPage(siteURL + objFolder.getPath());
-				
-				int i = getFilesOnPage(page, objFolder);
-				if(objFolder.getChildNodes().size() != 0) {
-					System.out.println("parent: " + ((SPFolder) obj).getParent() + ", folder: " + obj + ", size: " + ((SPFolder) obj).getChildNodes().size() + ", i: "+ i);					
-					for(Object s : objFolder.getChildNodes()) {
-						if(s instanceof SPFolder){
-							System.out.println("if3" + ((SPFolder) s).getShortPath());
-							selectedList.add(s);
-						}
-					}
-				} else {
-					objFolder.getParent().removeChild(objFolder);
-				}
-			}
-			selectedList.remove(0);
-		}
-		System.out.println("CheckENDsize: " +spFolder.getChildNodes().size());
-		
-	}
-	*/
 
 	private int getFilesOnPage(HtmlPage page, SPFolder parent) throws UnsupportedEncodingException {
 		int retInt = 0;
@@ -201,21 +166,10 @@ public class SPController {
 				}
 	    		if(href != null) {
 	    			if(isFolder){
-	    				SPFolder spFolder = new SPFolder(sitePath);
-	    				spFolder.setName(name);
-	    				spFolder.setPath(href);
-	    				spFolder.setAddedBy(addedBy);
-	    				spFolder.setChangedTime(changedTime);
-	    				spFolder.setParent(parent);
+	    				SPFolder spFolder = new SPFolder(sitePath, name, href, addedBy, changedTime, parent);
 		    			parent.addChild(spFolder);
-		    		
 	    			}else if(!hasLocalFile(href.substring(sitePath.length()))){
-	    				SPFile spFile = new SPFile(sitePath);
-	    				spFile.setName(name);
-	    				spFile.setPathAndType(href);
-	    				spFile.setChangedTime(changedTime);
-	    				spFile.setAddedBy(addedBy);
-	    				spFile.setParent(parent);
+	    				SPFile spFile = new SPFile(sitePath, name, href, addedBy, changedTime, parent);
 	    				parent.addChild(spFile);
 		    			retInt++;
 	    			}
@@ -294,26 +248,7 @@ public class SPController {
 		
 		
 	}
-	
-	public boolean isFoldersEmpty(SPFolder obj) {
-		boolean retVal = false;
-		if (obj.isEmptyForFiles()) {
-			retVal = true;
-		}
-		else {
-			ArrayList<SPFolder> tempList = obj.getSubfolders();
-			if (tempList.size() != 0) {
-				int i = 0;
-				while (i < tempList.size() && !retVal) {
-					retVal = isFoldersEmpty(tempList.get(i));
-					i++;
-				}
-			
-			}	
-		}
-		return retVal;
-	}
-	
+
 	public void downloadFile(SPFile spFile) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
 		String shortPath = spFile.getShortPath();
 		String path = spFile.getPath();	

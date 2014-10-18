@@ -13,25 +13,13 @@ public class SPFile {
 	private String addedBy;
 	private SPFolder parent;
 	
-	/**
-	 * @param name
-	 * @param type
-	 * @param path
-	 * @param changedTime
-	 * @param addedBy
-	 */
-	public SPFile(String name, String type, String path, String changedTime,
-			String addedBy) {
-		this.name = name;
-		this.type = type;
-		this.path = path;
-		setChangedTime(changedTime);
-		this.addedBy = addedBy;
-	}
-	
-	public SPFile(String beforePath) {
+	public SPFile(String beforePath, String name, String path, String addedBy, String changedTime, SPFolder parent){
 		this.beforePath = beforePath;
-		this.type = "";
+		this.name = name;
+		this.path = path;
+		this.addedBy = addedBy;
+		setChangedTime(changedTime);
+		this.parent = parent;
 	}
 
 	/**
