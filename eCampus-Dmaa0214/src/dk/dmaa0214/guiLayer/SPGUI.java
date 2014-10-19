@@ -37,6 +37,8 @@ import javax.swing.border.TitledBorder;
 import javax.swing.tree.TreePath;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.event.TreeSelectionEvent;
 
 public class SPGUI extends JPanel {
 	/**
@@ -164,6 +166,15 @@ public class SPGUI extends JPanel {
 		model = new FileTreeModel(null);
 		
 		tree = new JTree(model);
+		tree.addTreeSelectionListener(new TreeSelectionListener() {
+			public void valueChanged(TreeSelectionEvent arg0) {
+				if(tree.getSelectionCount() != 0){
+					btnDownload.setEnabled(true);
+				} else {
+					btnDownload.setEnabled(false);
+				}
+			}
+		});
 		tree.setRootVisible(false);
 		tree.setCellRenderer(new FileTreeCellRenderer());  
 		scrollPane.setViewportView(tree);
@@ -208,7 +219,7 @@ public class SPGUI extends JPanel {
 				downloadSelected();
 			}
 		});
-		updateButtons();
+		btnDownload.setEnabled(false);
 		panel_5.add(btnDownload, "2, 4");
 		
 		JPanel panel_7 = new JPanel();
@@ -278,30 +289,25 @@ public class SPGUI extends JPanel {
 		} else if(localPath.isEmpty()) {
 			showErrorDialog("Lokal sti må ikke være tom");			
 		} else {
-			Thread t = new Thread(){
-				public void run(){
-					try {
-						root = spCtr.getConnectedToSP(user, pass, localPath, siteURL, sitePath + txtSPPath.getText(), chkMD5.isSelected());
-						//buildTreeFromString(model, SPFileCont.getInstance().getFiles());
-						reloadTree();
-					} catch (FailingHttpStatusCodeException e) {
-						if (e.getStatusCode() == 401) {
-							showErrorDialog("Login er forkert");
-						}
-						else if (e.getStatusCode() == 404) {
-							showErrorDialog("Sti til eCampus er forkert");
-						}
-						else {
-							showErrorDialog("Code: " +  e.getStatusCode() + ": " + e.getStatusMessage());
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-						showErrorDialog(e.getMessage());
-					}
+			try {
+				root = spCtr.getConnectedToSP(user, pass, localPath, siteURL, sitePath + txtSPPath.getText(), chkMD5.isSelected());
+				//buildTreeFromString(model, SPFileCont.getInstance().getFiles());
+				reloadTree();
+			} catch (FailingHttpStatusCodeException e) {
+				if (e.getStatusCode() == 401) {
+					showErrorDialog("Login er forkert");
 				}
-			};
-			
-			t.run();
+				else if (e.getStatusCode() == 404) {
+					showErrorDialog("Sti til eCampus er forkert");
+				}
+				else {
+					showErrorDialog("Code: " +  e.getStatusCode() + ": " + e.getStatusMessage());
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				showErrorDialog(e.getMessage());
+			}
+
 		}	
 	}
 	
@@ -319,15 +325,6 @@ public class SPGUI extends JPanel {
     	model = new FileTreeModel(root);
     	tree.setModel(model);
 		expandAllNodes();
-		updateButtons();
     }
-	
-	private void updateButtons() {
-		if(tree.getRowCount() != 0) {
-			btnDownload.setEnabled(true);
-		} else {
-			btnDownload.setEnabled(false);
-		}
-	}
 
 }

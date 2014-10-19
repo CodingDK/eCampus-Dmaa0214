@@ -85,7 +85,7 @@ public class SPController {
 	    System.out.println("rootsize end:" + root.getChildNodes().size());
 	    
 	    removeEmptyFolders();
-	    
+			    
 	    return root;
 	}
 	
