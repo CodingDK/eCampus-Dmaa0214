@@ -2,18 +2,21 @@ package dk.dmaa0214.controllerLayer;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URLDecoder;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.SwingWorker;
+
 import com.gargoylesoftware.htmlunit.DefaultCredentialsProvider;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.WebClient;
@@ -27,34 +30,44 @@ import dk.dmaa0214.modelLayer.SPFile;
 import dk.dmaa0214.modelLayer.SPFolder;
 import dk.dmaa0214.modelLayer.SPFolderCont;
 
-
-public class SPController {
-
-	private SPFolder root;
-	private SPFolderCont spFolderCont;
+public class FileScraper extends SwingWorker<SPFolder, String> {
+	private String user;
+	private String pass;
+	private String localPath;
 	private String siteURL;
 	private String sitePath;
-	private String localPath;
-	private WebClient webClient;
-	private int counter;
 	private boolean checkMD5;
+	private JLabel statusLabel;
+	private SPFolderCont spFolderCont;
+	private WebClient webClient;
+	private SPFolder root;
+	
+	public FileScraper(String user, String pass, String localPath, String siteURL, String sitePath, boolean checkMD5, JLabel statusLabel){
+		this.user = user;
+		this.pass = pass;
+		this.localPath = localPath;
+		this.siteURL = siteURL;
+		this.sitePath = sitePath;
+		this.checkMD5 = checkMD5;
+		this.statusLabel = statusLabel;
+		this.spFolderCont = SPFolderCont.getInstance();
+	}
 
-	public SPController() {
-		siteURL = null;
+	@Override
+	protected SPFolder doInBackground() throws Exception {
+		getConnectedToSP();
+		return root;
 	}
 	
-	public SPFolder getConnectedToSP(String user, String pass, String localPath, String siteURL, String sitePath, boolean checkMD5) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
-		spFolderCont = SPFolderCont.getInstance();
-		
-		this.checkMD5 = checkMD5;
-		System.out.println("start Controller");
-		long startTime = System.currentTimeMillis();
-		
-		this.localPath = localPath;
-		//localPath = "D:/SkyDrive/UCN/Software konstruktion/Databaser";
-		this.siteURL = siteURL;
-		//sitePath = "/my-ecampus/holdsites/ec-dmaa0214/Materiale/2. Semester/Software konstruktion/Databaser";
-		this.sitePath = sitePath;
+	protected void process(final List<String> chks){
+		for(final String s : chks){
+			statusLabel.setText("Status: " + s);
+		}
+	}
+	
+	private SPFolder getConnectedToSP() throws FailingHttpStatusCodeException, MalformedURLException, IOException {
+		System.out.println("Connecting to eCampus");
+		publish("Connecting to eCampus");
 		String[] rootName = sitePath.split("/");
 		
 		root = new SPFolder(rootName[rootName.length-1]);
@@ -63,63 +76,23 @@ public class SPController {
 		webClient.getOptions().setCssEnabled(false);
 		DefaultCredentialsProvider credentialProvider = (DefaultCredentialsProvider) webClient.getCredentialsProvider();
 		credentialProvider.addNTLMCredentials(user, pass, null, -1, "localhost", "UCN");
-        //credentialProvider.addNTLMCredentials(“username”, “mypasword”, null, -1, “localhost”, “mydomain”);
 	    HtmlPage page = webClient.getPage(siteURL + sitePath);
 	    getFilesOnPage(page, root);
 	    
-	    System.out.println("rootsize:" + root.getChildNodes().size());
 	    if(root.getChildNodes().size() > 0){
 		    for(Object s : root.getChildNodes()){
-		    	System.out.println(s.getClass().getName());
 		    	if(s instanceof SPFolder){
+		    		System.out.println("Fetching child nodes - " + ((SPFolder) s).getName());
 		    		getChildren((SPFolder)s);
 		    	}
 		    }
 	    }
-	    
-	    long endTime   = System.currentTimeMillis();
-	    System.out.println("Files: " + counter);
-	    NumberFormat formatter = new DecimalFormat("#0.00000");
-	    endTime = System.currentTimeMillis();
-	    System.out.println("Execution time is " + formatter.format((endTime - startTime) / 1000d) + " seconds");
-	    System.out.println("rootsize end:" + root.getChildNodes().size());
-	    
+
 	    removeEmptyFolders();
 			    
 	    return root;
 	}
 	
-	private void removeEmptyFolders() {
-		ArrayList<SPFolder> folders = spFolderCont.getFiles();
-	    for(SPFolder sp : folders){
-	    	if(sp.isEmpty()){
-	    		sp.getParent().removeChild(sp);
-	    	}
-	    }
-	}
-
-	private void getChildren(SPFolder s) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
-		spFolderCont.addFile(s);
-		System.out.println(s.getPath());
-		HtmlPage page = webClient.getPage(siteURL + s.getPath());
-		getFilesOnPage(page, s);
-		ArrayList<Object> children = s.getChildNodes();
-		System.out.println("size: " + children.size());
-		if(children.size() > 0){
-			System.out.println("-----------");
-			for(Object child : children){
-				if(child instanceof SPFolder){
-					getChildren((SPFolder)child);
-					//if(isFoldersEmpty((SPFolder)child)) {
-			    	//	((SPFolder)child).getParent().removeChild(child);
-			    	//}
-				}
-			}
-			
-			System.out.println("-----------");
-		}
-	}
-
 	private int getFilesOnPage(HtmlPage page, SPFolder parent) throws UnsupportedEncodingException {
 		int retInt = 0;
 		if(parent == null){
@@ -171,7 +144,6 @@ public class SPController {
 	    				parent.addChild(spFile);
 		    			retInt++;
 	    			}
-	    			counter++;
 				}
 	    	}
 	    }
@@ -186,6 +158,8 @@ public class SPController {
 			System.out.println("test: " + file.getParentFile().exists());
 		} else if(checkMD5) {
 			if(!file.isDirectory()){
+				System.out.println("Comparing MD5");
+				publish("Comparing MD5");
 				System.out.println(file);
 				System.out.println(siteURL + sitePath + path);
 				String md5Local = "";
@@ -211,71 +185,66 @@ public class SPController {
 		
 		return retVal;
 	}
-		
-	public void downloadFiles(List<Object> selectedList) throws NullPointerException, FailingHttpStatusCodeException, MalformedURLException, IOException {
-		if (selectedList.size() == 0) {
-			throw new NullPointerException("Du skal vælge nogle filer først");
-		}
-		
-		HashSet<SPFile> dlList = new HashSet<SPFile>();
-		System.out.println("before while");
-		while(selectedList.size() != 0) {
-			System.out.println("list size: " + selectedList.size());
-			Object obj = selectedList.get(0);
-			if(obj instanceof SPFolder){
-				for(Object objA : ((SPFolder) obj).getChildNodes()){
-					System.out.println("forloop: " + objA);
-					if (!selectedList.contains(objA)) {
-						System.out.println("forloop if:" + objA);
-						selectedList.add(objA);
-					}
+	
+
+	private void removeEmptyFolders() {
+		publish("Removing the empty folders....");
+		ArrayList<SPFolder> folders = spFolderCont.getFiles();
+	    for(SPFolder sp : folders){
+	    	if(sp.isEmpty()){
+	    		sp.getParent().removeChild(sp);
+	    	}
+	    }
+	}
+
+	private void getChildren(SPFolder s) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
+		publish("Fetching child nodes - " + ((SPFolder) s).getName());
+		spFolderCont.addFile(s);
+		System.out.println(s.getPath());
+		HtmlPage page = webClient.getPage(siteURL + s.getPath());
+		getFilesOnPage(page, s);
+		ArrayList<Object> children = s.getChildNodes();
+		System.out.println("size: " + children.size());
+		if(children.size() > 0){
+			System.out.println("-----------");
+			for(Object child : children){
+				if(child instanceof SPFolder){
+					getChildren((SPFolder)child);
+					//if(isFoldersEmpty((SPFolder)child)) {
+			    	//	((SPFolder)child).getParent().removeChild(child);
+			    	//}
 				}
-				((SPFolder) obj).getParent().removeChild(obj);
-			}else if(obj instanceof SPFile){
-				System.out.println("added: " + obj);
-				dlList.add((SPFile) obj);
-				((SPFile) obj).getParent().removeChild(obj);
 			}
-			selectedList.remove(obj);
+			
+			System.out.println("-----------");
 		}
-		System.out.println("after while");
-		
-		for(SPFile f : dlList) {
-			downloadFile(f);
+	}
+	
+	protected void done(){
+		try{
+			get();
+		} catch(ExecutionException ex) {
+			Throwable e = ex.getCause();
+			if(e instanceof FailingHttpStatusCodeException){
+				if (((FailingHttpStatusCodeException) e).getStatusCode() == 401) {
+					statusLabel.setText("Error");
+					showErrorDialog("Login er forkert");
+				} else if (((FailingHttpStatusCodeException) e).getStatusCode() == 404) {
+					statusLabel.setText("Error");
+					showErrorDialog("Sti til eCampus er forkert");
+				} else {
+					statusLabel.setText("Error");
+					showErrorDialog("Code: " +  ((FailingHttpStatusCodeException) e).getStatusCode() + ": " + ((FailingHttpStatusCodeException) e).getStatusMessage());
+				}
+			}
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
-		
+	}
+	
+	private void showErrorDialog(String message) {
+		JOptionPane.showMessageDialog(null, message, "Error", JOptionPane.ERROR_MESSAGE);
 	}
 
-	public void downloadFile(SPFile spFile) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
-		String shortPath = spFile.getShortPath();
-		String path = spFile.getPath();	
-		
-		if(siteURL == null) {
-			throw new NullPointerException("Du skal sammenligne filer først");
-		}
-		
-		File localFile = new File(localPath + shortPath);
-	    InputStream ins = webClient.getPage(siteURL + path).getWebResponse().getContentAsStream();
-	    
-    	if(!localFile.getParentFile().exists()) {
-    		System.out.println("create dir: " + localFile.getParentFile().getName());
-    		localFile.getParentFile().mkdirs();
-    	}
-    	OutputStream ous = new FileOutputStream(localFile);
-        int length = -1;
-        System.out.println("downloading " + spFile);
-        byte[] buffer = new byte[1024];
-        while ((length = ins.read(buffer)) > -1) {
-        	ous.write(buffer, 0, length);
-        }
-        System.out.println("downloading done");
-        ous.close();
-        ins.close();
-	    
-	}
-
-	public SPFolder getRoot() {
-		return root;
-	}
 }

@@ -6,10 +6,13 @@ import javax.swing.JTree;
 import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.JScrollPane;
 
@@ -19,7 +22,8 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.RowSpec;
 import com.jgoodies.forms.factories.FormFactory;
 
-import dk.dmaa0214.controllerLayer.SPController;
+import dk.dmaa0214.controllerLayer.FileDownloader;
+import dk.dmaa0214.controllerLayer.FileScraper;
 import dk.dmaa0214.guiLayer.extensions.FileTreeCellRenderer;
 import dk.dmaa0214.guiLayer.extensions.FileTreeModel;
 import dk.dmaa0214.guiLayer.extensions.JFilePath;
@@ -32,6 +36,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
+import javax.swing.SwingWorker.StateValue;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 import javax.swing.tree.TreePath;
@@ -51,17 +56,16 @@ public class SPGUI extends JPanel {
 	private JTextField txtSPPath;
 	private String siteURL;
 	private String sitePath;
-	private SPController spCtr;
 	private JTree tree;
 	private FileTreeModel model;
 	private SPFolder root;
 	private JCheckBox chkMD5;
 	private JButton btnDownload;
+	private JLabel lblStatus;
 	/**
 	 * Create the panel.
 	 */
 	public SPGUI() {
-		spCtr = new SPController();
 		siteURL = "http://ecampus.ucn.dk";
 		sitePath = "/my-ecampus/holdsites/ec-dmaa0214/Materiale/";
 		
@@ -78,6 +82,8 @@ public class SPGUI extends JPanel {
 				RowSpec.decode("26px"),
 				FormFactory.LINE_GAP_ROWSPEC,
 				RowSpec.decode("212px:grow"),
+				FormFactory.RELATED_GAP_ROWSPEC,
+				RowSpec.decode("26px"),
 				FormFactory.LINE_GAP_ROWSPEC,}));
 		
 		JPanel panel_1 = new JPanel();
@@ -236,34 +242,48 @@ public class SPGUI extends JPanel {
 		
 		JPanel panel_4 = new JPanel();
 		panel_3.add(panel_4, "2, 3, fill, fill");
+		
+		JPanel statusPan = new JPanel();
+		statusPan.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		add(statusPan, "2, 9, 2, 1, fill, fill");
+		
+		lblStatus = new JLabel("Status");
+		statusPan.add(lblStatus);
 
 	}
 
 	private void downloadSelected() {
+		final String user = txtUser.getText(); 
+		final String pass = txtPass.getText();
+		final String localPath = txtLocalPath.getText();
 		ArrayList<Object> objs = new ArrayList<Object>();
 		
 		TreePath[] paths = tree.getSelectionPaths();
 		for(TreePath ps : paths){
 			objs.add(ps.getLastPathComponent());
-			System.out.println(ps.getLastPathComponent());
 		}
-
-		try {
-			spCtr.downloadFiles(objs);
-			reloadTree();
-		} catch (NullPointerException e) {
-			showErrorDialog(e.getMessage());
-			e.printStackTrace();
-		} catch (FailingHttpStatusCodeException e) {
-			showErrorDialog(e.getMessage());
-			e.printStackTrace();
-		} catch (MalformedURLException e) {
-			showErrorDialog(e.getMessage());
-			e.printStackTrace();
-		} catch (IOException e) {
-			showErrorDialog(e.getMessage());
-			e.printStackTrace();
-		}
+		
+		final FileDownloader fs = new FileDownloader(user, pass, localPath, siteURL, objs, lblStatus, this);
+		fs.addPropertyChangeListener(new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				if(evt.getPropertyName().equals("state")){
+					switch ((StateValue) evt.getNewValue()){
+					case DONE:
+						try {
+							fs.get();
+							reloadTree();
+							lblStatus.setText("Status: Done");
+						} catch (Exception e) {
+							lblStatus.setText("Status: Error");
+						}
+						break;
+					}
+				}
+			}
+		});
+		
+		fs.execute();
 	}
 
 	private void browseForLocalPath() {
@@ -279,9 +299,7 @@ public class SPGUI extends JPanel {
 		final String user = txtUser.getText(); 
 		final String pass = txtPass.getText();
 		final String localPath = txtLocalPath.getText();
-		//System.out.println("local: " + localPath);
-		//System.out.println("siteURL: "+ siteURL); 
-		//System.out.println("sitePath: "+ sitePath + txtSPPath.getText()); 
+
 		if(user.isEmpty()) {
 			showErrorDialog("Brugernavn må ikke være tomt");
 		} else if(pass.isEmpty()) {
@@ -289,25 +307,28 @@ public class SPGUI extends JPanel {
 		} else if(localPath.isEmpty()) {
 			showErrorDialog("Lokal sti må ikke være tom");			
 		} else {
-			try {
-				root = spCtr.getConnectedToSP(user, pass, localPath, siteURL, sitePath + txtSPPath.getText(), chkMD5.isSelected());
-				//buildTreeFromString(model, SPFileCont.getInstance().getFiles());
-				reloadTree();
-			} catch (FailingHttpStatusCodeException e) {
-				if (e.getStatusCode() == 401) {
-					showErrorDialog("Login er forkert");
+			final FileScraper fs = new FileScraper(user, pass, localPath, siteURL, sitePath + txtSPPath.getText(), chkMD5.isSelected(), lblStatus);
+			fs.addPropertyChangeListener(new PropertyChangeListener() {
+				@Override
+				public void propertyChange(PropertyChangeEvent evt) {
+					System.out.println(evt.getPropertyName());
+					if(evt.getPropertyName().equals("state")){
+						System.out.println(evt.getNewValue());
+						switch ((StateValue) evt.getNewValue()){
+						case DONE:
+							try {
+								root = fs.get();
+								reloadTree();
+								lblStatus.setText("Status: Done");
+							} catch (Exception e) {
+								lblStatus.setText("Status: Error");
+							}
+							break;
+						}
+					}
 				}
-				else if (e.getStatusCode() == 404) {
-					showErrorDialog("Sti til eCampus er forkert");
-				}
-				else {
-					showErrorDialog("Code: " +  e.getStatusCode() + ": " + e.getStatusMessage());
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-				showErrorDialog(e.getMessage());
-			}
-
+			});
+			fs.execute();
 		}	
 	}
 	
@@ -321,7 +342,7 @@ public class SPGUI extends JPanel {
         }
     }
 
-	private void reloadTree(){
+	public void reloadTree(){
     	model = new FileTreeModel(root);
     	tree.setModel(model);
 		expandAllNodes();
