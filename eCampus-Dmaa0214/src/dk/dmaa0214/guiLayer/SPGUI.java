@@ -3,6 +3,7 @@ package dk.dmaa0214.guiLayer;
 import javax.swing.JPanel;
 import javax.swing.JTree;
 
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -21,19 +22,18 @@ import com.jgoodies.forms.factories.FormFactory;
 import dk.dmaa0214.controllerLayer.SPController;
 import dk.dmaa0214.guiLayer.extensions.FileTreeCellRenderer;
 import dk.dmaa0214.guiLayer.extensions.FileTreeModel;
+import dk.dmaa0214.guiLayer.extensions.JFilePath;
 import dk.dmaa0214.modelLayer.SPFolder;
 
 import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
-import javax.swing.JComboBox;
+import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
-import javax.swing.filechooser.FileSystemView;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreePath;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -53,8 +53,8 @@ public class SPGUI extends JPanel {
 	private JTree tree;
 	private FileTreeModel model;
 	private SPFolder root;
-	private boolean checkMD5;
 	private JCheckBox chkMD5;
+	private JButton btnDownload;
 	/**
 	 * Create the panel.
 	 */
@@ -123,10 +123,11 @@ public class SPGUI extends JPanel {
 		JLabel lblLocalPath = new JLabel("Local Path:");
 		panel_6.add(lblLocalPath, "1, 1, right, default");
 		
-		txtLocalPath = new JTextField();
+		txtLocalPath = new JFilePath();
 		txtLocalPath.setText("D:\\ITIO");
 		panel_6.add(txtLocalPath, "3, 1, fill, default");
 		txtLocalPath.setColumns(10);
+		
 		
 		JButton btnBrowser = new JButton("Browse");
 		btnBrowser.addActionListener(new ActionListener() {
@@ -201,12 +202,13 @@ public class SPGUI extends JPanel {
 		});
 		panel_5.add(btnRun, "2, 2");
 		
-		JButton btnDownload = new JButton("Download Changes");
+		btnDownload = new JButton("Download Changes");
 		btnDownload.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				downloadSelected();
 			}
 		});
+		updateButtons();
 		panel_5.add(btnDownload, "2, 4");
 		
 		JPanel panel_7 = new JPanel();
@@ -317,7 +319,15 @@ public class SPGUI extends JPanel {
     	model = new FileTreeModel(root);
     	tree.setModel(model);
 		expandAllNodes();
-		
+		updateButtons();
     }
+	
+	private void updateButtons() {
+		if(tree.getRowCount() != 0) {
+			btnDownload.setEnabled(true);
+		} else {
+			btnDownload.setEnabled(false);
+		}
+	}
 
 }
