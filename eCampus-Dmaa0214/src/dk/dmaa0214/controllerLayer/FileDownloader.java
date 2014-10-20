@@ -105,6 +105,7 @@ public class FileDownloader extends SwingWorker<Void, SPFile> {
     	if(!localFile.getParentFile().exists()) {
     		System.out.println("create dir: " + localFile.getParentFile().getName());
     		localFile.getParentFile().mkdirs();
+    		counter++;
     	}
     	OutputStream ous = new FileOutputStream(localFile);
         int length = -1;

@@ -185,7 +185,6 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 		
 		return retVal;
 	}
-	
 
 	private void removeEmptyFolders() {
 		publish("Removing the empty folders....");
@@ -206,17 +205,11 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 		ArrayList<Object> children = s.getChildNodes();
 		System.out.println("size: " + children.size());
 		if(children.size() > 0){
-			System.out.println("-----------");
 			for(Object child : children){
 				if(child instanceof SPFolder){
 					getChildren((SPFolder)child);
-					//if(isFoldersEmpty((SPFolder)child)) {
-			    	//	((SPFolder)child).getParent().removeChild(child);
-			    	//}
 				}
 			}
-			
-			System.out.println("-----------");
 		}
 	}
 	
@@ -238,7 +231,6 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 				}
 			}
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
