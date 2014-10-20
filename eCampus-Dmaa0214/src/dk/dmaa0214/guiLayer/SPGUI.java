@@ -44,6 +44,11 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
+import java.awt.CardLayout;
+import javax.swing.BoxLayout;
+import java.awt.BorderLayout;
+import javax.swing.SwingConstants;
+import javax.swing.JProgressBar;
 
 public class SPGUI extends JPanel {
 	/**
@@ -61,7 +66,10 @@ public class SPGUI extends JPanel {
 	private SPFolder root;
 	private JCheckBox chkMD5;
 	private JButton btnDownload;
+	private JProgressBar progressBar;
 	private JLabel lblStatus;
+	private JPanel statusPan;
+	private JButton btnRun;
 	/**
 	 * Create the panel.
 	 */
@@ -211,9 +219,11 @@ public class SPGUI extends JPanel {
 				FormFactory.RELATED_GAP_ROWSPEC,
 				RowSpec.decode("25px:grow"),}));
 		
-		JButton btnRun = new JButton("Synchronize");
+		btnRun = new JButton("Synchronize");
 		btnRun.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				CardLayout cl = (CardLayout) statusPan.getLayout();
+				cl.show(statusPan, "StatusLabel");
 				getFileList();
 			}
 		});
@@ -222,6 +232,8 @@ public class SPGUI extends JPanel {
 		btnDownload = new JButton("Download Changes");
 		btnDownload.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				CardLayout cl = (CardLayout) statusPan.getLayout();
+				cl.show(statusPan, "StatusProgress");
 				downloadSelected();
 			}
 		});
@@ -243,16 +255,35 @@ public class SPGUI extends JPanel {
 		JPanel panel_4 = new JPanel();
 		panel_3.add(panel_4, "2, 3, fill, fill");
 		
-		JPanel statusPan = new JPanel();
+		statusPan = new JPanel();
 		statusPan.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		add(statusPan, "2, 9, 2, 1, fill, fill");
+		statusPan.setLayout(new CardLayout(0, 0));
+		
+		//statusPan.
+		
+		JPanel panel_8 = new JPanel();
+		statusPan.add(panel_8, "StatusLabel");
+		panel_8.setLayout(new BorderLayout(0, 0));
 		
 		lblStatus = new JLabel("Status");
-		statusPan.add(lblStatus);
+		lblStatus.setHorizontalAlignment(SwingConstants.CENTER);
+		panel_8.add(lblStatus, BorderLayout.CENTER);
+		
+		JPanel panel_9 = new JPanel();
+		statusPan.add(panel_9, "StatusProgress");
+		panel_9.setLayout(new BorderLayout(0, 0));
+		
+		progressBar = new JProgressBar();
+		panel_9.add(progressBar, BorderLayout.CENTER);
+		progressBar.setStringPainted(true);
 
 	}
 
 	private void downloadSelected() {
+		btnDownload.setEnabled(false);
+		btnRun.setEnabled(false);
+		
 		final String user = txtUser.getText(); 
 		final String pass = txtPass.getText();
 		final String localPath = txtLocalPath.getText();
@@ -263,7 +294,7 @@ public class SPGUI extends JPanel {
 			objs.add(ps.getLastPathComponent());
 		}
 		
-		final FileDownloader fs = new FileDownloader(user, pass, localPath, siteURL, objs, lblStatus, this);
+		final FileDownloader fs = new FileDownloader(user, pass, localPath, siteURL, objs, this, progressBar);
 		fs.addPropertyChangeListener(new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
@@ -274,9 +305,14 @@ public class SPGUI extends JPanel {
 							fs.get();
 							reloadTree();
 							lblStatus.setText("Status: Done");
+							btnRun.setEnabled(true);
 						} catch (Exception e) {
+							btnRun.setEnabled(true);
 							lblStatus.setText("Status: Error");
 						}
+						break;
+					default:
+						System.out.println(evt.getNewValue());
 						break;
 					}
 				}

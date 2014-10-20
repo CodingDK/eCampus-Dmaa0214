@@ -10,8 +10,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JProgressBar;
 import javax.swing.SwingWorker;
 
 import com.gargoylesoftware.htmlunit.DefaultCredentialsProvider;
@@ -28,15 +28,20 @@ public class FileDownloader extends SwingWorker<Void, SPFile> {
 	private String siteURL;
 	private WebClient webClient;
 	private List<Object> dList;
-	private JLabel statusLabel;
+	private JProgressBar progressBar;
 	private SPGUI spgui;
+	private int counter;
 	
-	public FileDownloader(String user, String pass, String localPath, String siteURL, List<Object> selectedList, JLabel statusLabel, SPGUI spgui){
+	public FileDownloader(String user, String pass, String localPath, String siteURL, List<Object> selectedList, SPGUI spgui, JProgressBar progressBar){
 		this.localPath = localPath;
 		this.siteURL = siteURL;
 		this.dList = selectedList;
-		this.statusLabel = statusLabel;
+		this.progressBar = progressBar;
 		this.spgui = spgui;
+		this.counter = 0;
+		
+		progressBar.setMaximum(selectedList.size());
+		progressBar.setMinimum(counter);
 		
 		webClient = new WebClient();
 		webClient.getOptions().setJavaScriptEnabled(false);
@@ -89,6 +94,7 @@ public class FileDownloader extends SwingWorker<Void, SPFile> {
 		String shortPath = spFile.getShortPath();
 		String path = spFile.getPath();	
 		
+		
 		if(siteURL == null) {
 			throw new NullPointerException("Du skal sammenligne filer først");
 		}
@@ -140,9 +146,11 @@ public class FileDownloader extends SwingWorker<Void, SPFile> {
 	
 	protected void process(final List<SPFile> chks){
 		for(SPFile sp : chks){
-			statusLabel.setText("Downloading " + sp);
+			counter++;
 			sp.getParent().removeChild(sp);
 			spgui.reloadTree();
+			progressBar.setValue(counter);
+			progressBar.setString("Downloading: " + sp);
 		}
 	}
 
