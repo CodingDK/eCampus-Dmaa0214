@@ -1,7 +1,6 @@
 package dk.dmaa0214.guiLayer.extensions;
 
 import java.awt.Graphics;
-import java.awt.event.ActionListener;
 import java.io.File;
 
 import javax.swing.Icon;

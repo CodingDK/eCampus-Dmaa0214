@@ -3,20 +3,13 @@ package dk.dmaa0214.guiLayer;
 import javax.swing.JPanel;
 import javax.swing.JTree;
 
-import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
-
 import javax.swing.JScrollPane;
 
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.RowSpec;
@@ -29,15 +22,12 @@ import dk.dmaa0214.guiLayer.extensions.FileTreeModel;
 import dk.dmaa0214.guiLayer.extensions.JFilePath;
 import dk.dmaa0214.modelLayer.SPFolder;
 
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.SwingWorker.StateValue;
-import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 import javax.swing.tree.TreePath;
 import javax.swing.JButton;
@@ -45,7 +35,6 @@ import javax.swing.JCheckBox;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
 import java.awt.CardLayout;
-import javax.swing.BoxLayout;
 import java.awt.BorderLayout;
 import javax.swing.SwingConstants;
 import javax.swing.JProgressBar;
