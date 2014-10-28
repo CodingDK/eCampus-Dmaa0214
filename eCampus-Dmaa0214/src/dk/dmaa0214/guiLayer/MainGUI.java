@@ -53,7 +53,7 @@ public class MainGUI {
 		frame.setBounds(100, 100, 600, 412);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setContentPane(new SPGUI());
-		frame.setTitle("eCampus Gateway V0.01");
+		frame.setTitle("eCampus Gateway V0.04");
 	}
 
 }
