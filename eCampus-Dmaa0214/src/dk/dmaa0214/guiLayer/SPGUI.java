@@ -324,15 +324,19 @@ public class SPGUI extends JPanel {
 		final String user = txtUser.getText(); 
 		final String pass = txtPass.getText();
 		final String localPath = txtLocalPath.getText();
-
+		String sitePathTxt = txtSPPath.getText();
 		if(user.isEmpty()) {
 			showErrorDialog("Brugernavn må ikke være tomt");
 		} else if(pass.isEmpty()) {
 			showErrorDialog("Password må ikke være tomt");
 		} else if(localPath.isEmpty()) {
-			showErrorDialog("Lokal sti må ikke være tom");			
+			showErrorDialog("Lokal sti må ikke være tom");
 		} else {
-			final FileScraper fs = new FileScraper(user, pass, localPath, siteURL, sitePath + txtSPPath.getText(), chkMD5.isSelected(), lblStatus);
+			if(sitePathTxt.trim().substring(0, 1).equals("/")) {
+				sitePathTxt = sitePathTxt.trim().substring(1);
+			}
+			clearTree();
+			final FileScraper fs = new FileScraper(user, pass, localPath, siteURL, sitePath + sitePathTxt, chkMD5.isSelected(), lblStatus);
 			fs.addPropertyChangeListener(new PropertyChangeListener() {
 				@Override
 				public void propertyChange(PropertyChangeEvent evt) {
@@ -365,6 +369,11 @@ public class SPGUI extends JPanel {
         for(int i=0;i<tree.getRowCount();++i){
             tree.expandRow(i);
         }
+    }
+    
+    private void clearTree() {
+    	model = new FileTreeModel(null);
+    	tree.setModel(model);
     }
 
 	public void reloadTree(){
