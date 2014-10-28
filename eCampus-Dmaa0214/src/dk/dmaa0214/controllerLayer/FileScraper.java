@@ -66,6 +66,11 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 	private SPFolder getConnectedToSP() throws FailingHttpStatusCodeException, MalformedURLException, IOException {
 		System.out.println("Connecting to eCampus");
 		publish("Connecting to eCampus");
+		sitePath = sitePath.trim();
+		if (sitePath.length() > 0 && sitePath.charAt(sitePath.length()-1)=='/') {
+			sitePath = sitePath.substring(0, sitePath.length()-1);
+		}
+		System.out.println(sitePath);
 		String[] rootName = sitePath.split("/");
 		
 		root = new SPFolder(rootName[rootName.length-1]);
