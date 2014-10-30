@@ -7,9 +7,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
+
 import javax.swing.JScrollPane;
 
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.RowSpec;
@@ -17,11 +21,16 @@ import com.jgoodies.forms.factories.FormFactory;
 
 import dk.dmaa0214.controllerLayer.FileDownloader;
 import dk.dmaa0214.controllerLayer.FileScraper;
+import dk.dmaa0214.controllerLayer.SPNewsScraper;
 import dk.dmaa0214.guiLayer.extensions.FileTreeCellRenderer;
 import dk.dmaa0214.guiLayer.extensions.FileTreeModel;
 import dk.dmaa0214.guiLayer.extensions.JFilePath;
+import dk.dmaa0214.guiLayer.extensions.NewsCellRenderer;
+import dk.dmaa0214.guiLayer.extensions.NewsListCellModel;
 import dk.dmaa0214.modelLayer.SPFolder;
+import dk.dmaa0214.modelLayer.SPNews;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
@@ -34,10 +43,13 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
+
 import java.awt.CardLayout;
 import java.awt.BorderLayout;
+
 import javax.swing.SwingConstants;
 import javax.swing.JProgressBar;
+import javax.swing.JList;
 
 public class SPGUI extends JPanel {
 	/**
@@ -59,6 +71,7 @@ public class SPGUI extends JPanel {
 	private JLabel lblStatus;
 	private JPanel statusPan;
 	private JButton btnRun;
+	private JList<SPNews> newsList;
 	/**
 	 * Create the panel.
 	 */
@@ -68,13 +81,14 @@ public class SPGUI extends JPanel {
 		
 		setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
-				ColumnSpec.decode("265px:grow"),
-				ColumnSpec.decode("175px:grow"),
-				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,},
+				ColumnSpec.decode("240px:grow"),
+				ColumnSpec.decode("160px:grow"),
+				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
+				ColumnSpec.decode("max(200px;default):grow"),},
 			new RowSpec[] {
-				RowSpec.decode("52px"),
+				RowSpec.decode("52px:grow"),
 				FormFactory.LINE_GAP_ROWSPEC,
-				RowSpec.decode("26px"),
+				RowSpec.decode("26px:grow"),
 				FormFactory.RELATED_GAP_ROWSPEC,
 				RowSpec.decode("26px"),
 				FormFactory.LINE_GAP_ROWSPEC,
@@ -114,6 +128,17 @@ public class SPGUI extends JPanel {
 		JPanel panel = new JPanel();
 		add(panel, "3, 1, fill, fill");
 		
+		JPanel panel_12 = new JPanel();
+		add(panel_12, "5, 1, fill, fill");
+		
+		JButton btnNews = new JButton("Get news");
+		btnNews.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				getNews();
+			}
+		});
+		panel_12.add(btnNews);
+		
 		JPanel panel_6 = new JPanel();
 		add(panel_6, "2, 3, 2, 1, fill, fill");
 		panel_6.setLayout(new FormLayout(new ColumnSpec[] {
@@ -141,6 +166,27 @@ public class SPGUI extends JPanel {
 			}
 		});
 		panel_6.add(btnBrowser, "5, 1");
+		
+		JPanel panel_10 = new JPanel();
+		add(panel_10, "5, 3, 1, 5, fill, fill");
+		panel_10.setLayout(new FormLayout(new ColumnSpec[] {
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"),},
+			new RowSpec[] {
+				FormFactory.RELATED_GAP_ROWSPEC,
+				RowSpec.decode("max(113dlu;default):grow"),
+				FormFactory.RELATED_GAP_ROWSPEC,
+				RowSpec.decode("default:grow"),}));
+		
+		JScrollPane scrollPane_1 = new JScrollPane();
+		panel_10.add(scrollPane_1, "2, 2, fill, fill");
+		
+		newsList = new JList<SPNews>();
+		newsList.setCellRenderer(new NewsCellRenderer());
+		scrollPane_1.setViewportView(newsList);
+		
+		JPanel panel_11 = new JPanel();
+		panel_10.add(panel_11, "2, 4, fill, fill");
 		
 		JPanel panel_2 = new JPanel();
 		add(panel_2, "2, 5, 2, 1, fill, fill");
@@ -248,9 +294,7 @@ public class SPGUI extends JPanel {
 		statusPan.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		add(statusPan, "2, 9, 2, 1, fill, fill");
 		statusPan.setLayout(new CardLayout(0, 0));
-		
-		//statusPan.
-		
+				
 		JPanel panel_8 = new JPanel();
 		statusPan.add(panel_8, "StatusLabel");
 		panel_8.setLayout(new BorderLayout(0, 0));
@@ -267,6 +311,33 @@ public class SPGUI extends JPanel {
 		panel_9.add(progressBar, BorderLayout.CENTER);
 		progressBar.setStringPainted(true);
 
+	}
+	
+	private void getNews() {
+		try {
+			SPNewsScraper newsScraper = new SPNewsScraper(txtUser.getText(), txtPass.getText());
+			updateNewsList(newsScraper.getNewsList());
+		} catch (NullPointerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FailingHttpStatusCodeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	private void updateNewsList(ArrayList<SPNews> nList) {
+		DefaultListModel<SPNews> model = new DefaultListModel<SPNews>();
+		for (SPNews n : nList) {
+			model.addElement(n);
+		}
+		newsList.setModel(model);
 	}
 
 	private void downloadSelected() {
