@@ -22,7 +22,7 @@ public class NewsCellRenderer extends DefaultListCellRenderer {
 	public Component getListCellRendererComponent(JList<? extends Object> list,
 			Object value, int index, boolean isSelected, boolean cellHasFocus) {
 		SPNews newsItem = (SPNews) value;
-		NewsListCellModel cellModel = new NewsListCellModel(newsItem);
+		NewsListCellModel cellModel = new NewsListCellModel(newsItem, isSelected);
 		
 		return cellModel;
 	}

@@ -51,6 +51,9 @@ import javax.swing.SwingConstants;
 import javax.swing.JProgressBar;
 import javax.swing.JList;
 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
 public class SPGUI extends JPanel {
 	/**
 	 * 
@@ -84,7 +87,8 @@ public class SPGUI extends JPanel {
 				ColumnSpec.decode("240px:grow"),
 				ColumnSpec.decode("160px:grow"),
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
-				ColumnSpec.decode("max(200px;default):grow"),},
+				ColumnSpec.decode("350px"),
+				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,},
 			new RowSpec[] {
 				RowSpec.decode("52px:grow"),
 				FormFactory.LINE_GAP_ROWSPEC,
@@ -170,23 +174,25 @@ public class SPGUI extends JPanel {
 		JPanel panel_10 = new JPanel();
 		add(panel_10, "5, 3, 1, 5, fill, fill");
 		panel_10.setLayout(new FormLayout(new ColumnSpec[] {
-				FormFactory.RELATED_GAP_COLSPEC,
 				ColumnSpec.decode("default:grow"),},
 			new RowSpec[] {
-				FormFactory.RELATED_GAP_ROWSPEC,
-				RowSpec.decode("max(113dlu;default):grow"),
-				FormFactory.RELATED_GAP_ROWSPEC,
-				RowSpec.decode("default:grow"),}));
+				RowSpec.decode("max(113dlu;default):grow"),}));
 		
 		JScrollPane scrollPane_1 = new JScrollPane();
-		panel_10.add(scrollPane_1, "2, 2, fill, fill");
+		panel_10.add(scrollPane_1, "1, 1, fill, fill");
 		
 		newsList = new JList<SPNews>();
+		newsList.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				JList list = (JList)arg0.getSource();
+		        if (arg0.getClickCount() == 2) {
+		            showNews(list.getSelectedValue());
+		        }
+			}
+		});
 		newsList.setCellRenderer(new NewsCellRenderer());
 		scrollPane_1.setViewportView(newsList);
-		
-		JPanel panel_11 = new JPanel();
-		panel_10.add(panel_11, "2, 4, fill, fill");
 		
 		JPanel panel_2 = new JPanel();
 		add(panel_2, "2, 5, 2, 1, fill, fill");
@@ -292,7 +298,7 @@ public class SPGUI extends JPanel {
 		
 		statusPan = new JPanel();
 		statusPan.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		add(statusPan, "2, 9, 2, 1, fill, fill");
+		add(statusPan, "2, 9, 4, 1, fill, fill");
 		statusPan.setLayout(new CardLayout(0, 0));
 				
 		JPanel panel_8 = new JPanel();
@@ -313,6 +319,14 @@ public class SPGUI extends JPanel {
 
 	}
 	
+	protected void showNews(Object selectedValue) {
+		if(selectedValue instanceof SPNews){
+			SPNews sp = (SPNews) selectedValue;
+			NewsDialog newsDia = new NewsDialog(sp);
+			newsDia.setVisible(true);
+		}
+	}
+
 	private void getNews() {
 		try {
 			SPNewsScraper newsScraper = new SPNewsScraper(txtUser.getText(), txtPass.getText());
