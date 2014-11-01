@@ -23,6 +23,7 @@ import javax.swing.SwingConstants;
 
 public class NewsDialog extends JDialog {
 
+	private static final long serialVersionUID = 1L;
 	private final JPanel contentPanel = new JPanel();
 
 	/**
@@ -54,7 +55,11 @@ public class NewsDialog extends JDialog {
 			contentPanel.add(panel, "1, 3, fill, fill");
 			panel.setLayout(new BorderLayout(0, 0));
 			{
-				String text = makeLineBreak(spNews.getText(), 50);
+				String text = spNews.getFullText();
+				if(text.isEmpty()) {
+					text = makeLineBreak(spNews.getText(), 50);
+				}
+				
 				JLabel lblText = new JLabel("<html>" + text + "</html>");
 				lblText.setVerticalAlignment(SwingConstants.TOP);
 				lblText.setHorizontalAlignment(SwingConstants.LEFT);

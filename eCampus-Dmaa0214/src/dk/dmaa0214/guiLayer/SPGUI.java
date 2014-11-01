@@ -75,6 +75,7 @@ public class SPGUI extends JPanel {
 	private JPanel statusPan;
 	private JButton btnRun;
 	private JList<SPNews> newsList;
+	private SPNewsScraper newsScraper;
 	/**
 	 * Create the panel.
 	 */
@@ -185,7 +186,7 @@ public class SPGUI extends JPanel {
 		newsList.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
-				JList list = (JList)arg0.getSource();
+				JList<SPNews> list = (JList<SPNews>) arg0.getSource();
 		        if (arg0.getClickCount() == 2) {
 		            showNews(list.getSelectedValue());
 		        }
@@ -319,17 +320,34 @@ public class SPGUI extends JPanel {
 
 	}
 	
-	protected void showNews(Object selectedValue) {
-		if(selectedValue instanceof SPNews){
-			SPNews sp = (SPNews) selectedValue;
-			NewsDialog newsDia = new NewsDialog(sp);
-			newsDia.setVisible(true);
+	protected void showNews(SPNews selectedValue) {
+		//if(selectedValue instanceof SPNews){
+		//SPNews sp = (SPNews) selectedValue;
+		try {
+			if(selectedValue.getFullText().isEmpty()) {
+				newsScraper.getSingleNews(selectedValue);
+			}
+		} catch (FailingHttpStatusCodeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NullPointerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		NewsDialog newsDia = new NewsDialog(selectedValue);
+		newsDia.setVisible(true);
+		//}
 	}
 
 	private void getNews() {
 		try {
-			SPNewsScraper newsScraper = new SPNewsScraper(txtUser.getText(), txtPass.getText());
+			newsScraper = new SPNewsScraper(txtUser.getText(), txtPass.getText());
 			updateNewsList(newsScraper.getNewsList());
 		} catch (NullPointerException e) {
 			// TODO Auto-generated catch block

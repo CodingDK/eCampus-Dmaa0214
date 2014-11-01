@@ -8,37 +8,53 @@ import java.util.Arrays;
 import com.gargoylesoftware.htmlunit.DefaultCredentialsProvider;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
 
 import dk.dmaa0214.modelLayer.SPNews;
 
 public class SPNewsScraper {
 	
 	//public static void main(String [] args) {
-		//new SPNewsScraper();
+	//	new SPNewsScraper(); 
 	//}
-
-	private String user;
-	private String pass;
-	private String siteURL;
 	
-	public SPNewsScraper(String user, String pass) {
-		this.user = user;
-		this.pass = pass;
-		this.siteURL = "http://ecampus.ucn.dk/Noticeboard/_Layouts/NoticeBoard/Ajax.aspx?Action="
-				+ "GetNewsList&ShowBodyContent=SHORT100&WebId=87441127-db6f-4499-8c99-3dea925e04a8"
-				+ "&ChannelList=11776,4096,3811,3817,4311,4312,4313,4768,4314,4315,4316,4317,4310,"
-				+ "&DateFormat=dd/MM/yyyy HH:mm&List=Current,Archived&IncludeRead=true&MaxToShow=10"
-				+ "&Page=1&frontpageonly=false";
-	}
-
-	public ArrayList<SPNews> getNewsList() throws NullPointerException, FailingHttpStatusCodeException, MalformedURLException, IOException {
-		WebClient webClient = new WebClient();
+	private WebClient webClient;
+	
+	public SPNewsScraper(String user, String pass) {		
+		webClient = new WebClient();
 		webClient.getOptions().setJavaScriptEnabled(false);
 		webClient.getOptions().setCssEnabled(false);
 		DefaultCredentialsProvider credentialProvider = (DefaultCredentialsProvider) webClient.getCredentialsProvider();
 		credentialProvider.addNTLMCredentials(user, pass, null, -1, "localhost", "UCN");
-	    HtmlPage page = webClient.getPage(siteURL);
+	}
+	
+	public void getSingleNews(SPNews spNews) throws FailingHttpStatusCodeException, MalformedURLException, IOException, NullPointerException {
+		int id = spNews.getId();
+		String siteDialogURL = "http://ecampus.ucn.dk/Noticeboard/Lists/NoticeBoard/DispForm.aspx?"
+				+ "NoticeBoardItem=" + id + "&WebID=87441127-db6f-4499-8c99-3dea925e04a8&IsDlg=1";
+		HtmlPage page = webClient.getPage(siteDialogURL);
+		HtmlTableCell td = page.getFirstByXPath("//td[@class='wt-2column-t1-td1']");
+		if(td == null) {
+			throw new NullPointerException("Nyhedstekst kunne ikke hentes. Internkode: #3");
+		}
+		DomNode div = td.getChildNodes().get(0);
+		if(div == null) {
+			throw new NullPointerException("Nyhedstekst kunne ikke hentes. Internkode: #4");
+		}
+		System.out.println(div.getChildNodes());
+		spNews.setFullText(div.asXml());
+		//System.out.println(div.asXml());
+	}
+
+	public ArrayList<SPNews> getNewsList() throws NullPointerException, FailingHttpStatusCodeException, MalformedURLException, IOException {
+		String siteURL = "http://ecampus.ucn.dk/Noticeboard/_Layouts/NoticeBoard/Ajax.aspx?Action="
+				+ "GetNewsList&ShowBodyContent=SHORT100&WebId=87441127-db6f-4499-8c99-3dea925e04a8"
+				+ "&ChannelList=11776,4096,3811,3817,4311,4312,4313,4768,4314,4315,4316,4317,4310,"
+				+ "&DateFormat=dd/MM/yyyy HH:mm&List=Current,Archived&IncludeRead=true&MaxToShow=10"
+				+ "&Page=1&frontpageonly=false";
+		HtmlPage page = webClient.getPage(siteURL);
 	    return ScrapeNewsList(page.asText());
 	}
 

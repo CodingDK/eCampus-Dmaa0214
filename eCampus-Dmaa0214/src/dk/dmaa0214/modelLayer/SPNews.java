@@ -9,6 +9,7 @@ public class SPNews {
 	private String date;
 	private ArrayList<String> channels;
 	private String text;
+	private String fullText;
 	private String addedBy;
 	private boolean read;
 	
@@ -33,6 +34,7 @@ public class SPNews {
 		this.text = text;
 		this.addedBy = addedBy;
 		this.read = read;
+		this.fullText = "";
 	}
 
 	/**
@@ -82,5 +84,19 @@ public class SPNews {
 	 */
 	public boolean isRead() {
 		return read;
+	}
+
+	/**
+	 * @return the fullText
+	 */
+	public String getFullText() {
+		return fullText;
+	}
+
+	/**
+	 * @param fullText the fullText to set
+	 */
+	public void setFullText(String fullText) {
+		this.fullText = fullText;
 	}
 }
