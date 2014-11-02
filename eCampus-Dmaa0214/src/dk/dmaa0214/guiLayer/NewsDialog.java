@@ -30,6 +30,11 @@ public class NewsDialog extends JDialog {
 	 * Create the dialog.
 	 */
 	public NewsDialog(SPNews spNews) {
+		String text = spNews.getFullText();
+		if(text.isEmpty()) {
+			text = makeLineBreak(spNews.getText(), 50);
+		}
+		
 		setBounds(100, 100, 450, 128);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -50,23 +55,18 @@ public class NewsDialog extends JDialog {
 				panel.add(lblTitle, BorderLayout.CENTER);
 			}
 		}
-		{
+		
 			JPanel panel = new JPanel();
 			contentPanel.add(panel, "1, 3, fill, fill");
 			panel.setLayout(new BorderLayout(0, 0));
-			{
-				String text = spNews.getFullText();
-				if(text.isEmpty()) {
-					text = makeLineBreak(spNews.getText(), 50);
-				}
-				
+						
 				JLabel lblText = new JLabel("<html>" + text + "</html>");
 				lblText.setVerticalAlignment(SwingConstants.TOP);
 				lblText.setHorizontalAlignment(SwingConstants.LEFT);
 				lblText.setFont(new Font("Tahoma", Font.PLAIN, 9));
 				panel.add(lblText, BorderLayout.CENTER);
-			}
-		}
+			
+		
 		{
 			JPanel buttonPane = new JPanel();
 			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -82,6 +82,7 @@ public class NewsDialog extends JDialog {
 				buttonPane.add(cancelButton);
 			}
 		}
+		pack();
 	}
 	
 	private String makeLineBreak(String str, int length) {

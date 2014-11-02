@@ -4,20 +4,18 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-
 import com.gargoylesoftware.htmlunit.DefaultCredentialsProvider;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.DomNode;
+import com.gargoylesoftware.htmlunit.html.DomNodeList;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
-
 import dk.dmaa0214.modelLayer.SPNews;
 
 public class SPNewsScraper {
 	
 	//public static void main(String [] args) {
-	//	new SPNewsScraper(); 
+	//	new SPNewsScraper();
 	//}
 	
 	private WebClient webClient;
@@ -29,23 +27,24 @@ public class SPNewsScraper {
 		DefaultCredentialsProvider credentialProvider = (DefaultCredentialsProvider) webClient.getCredentialsProvider();
 		credentialProvider.addNTLMCredentials(user, pass, null, -1, "localhost", "UCN");
 	}
-	
+
 	public void getSingleNews(SPNews spNews) throws FailingHttpStatusCodeException, MalformedURLException, IOException, NullPointerException {
 		int id = spNews.getId();
 		String siteDialogURL = "http://ecampus.ucn.dk/Noticeboard/Lists/NoticeBoard/DispForm.aspx?"
 				+ "NoticeBoardItem=" + id + "&WebID=87441127-db6f-4499-8c99-3dea925e04a8&IsDlg=1";
 		HtmlPage page = webClient.getPage(siteDialogURL);
-		HtmlTableCell td = page.getFirstByXPath("//td[@class='wt-2column-t1-td1']");
-		if(td == null) {
+		DomNode div = page.getFirstByXPath("//td[@class='wt-2column-t1-td1']/div/div");
+		if(div == null) {
 			throw new NullPointerException("Nyhedstekst kunne ikke hentes. Internkode: #3");
 		}
-		DomNode div = td.getChildNodes().get(0);
-		if(div == null) {
-			throw new NullPointerException("Nyhedstekst kunne ikke hentes. Internkode: #4");
+		DomNodeList<DomNode> list = div.getChildNodes();
+		String fullText = "";
+		for (int i = 5; i < list.size()-3; i++) {
+			DomNode dn = list.get(i);
+			fullText += dn.asXml();
 		}
-		System.out.println(div.getChildNodes());
-		spNews.setFullText(div.asXml());
-		//System.out.println(div.asXml());
+		//System.out.println(fullText);
+		spNews.setFullText(fullText);
 	}
 
 	public ArrayList<SPNews> getNewsList() throws NullPointerException, FailingHttpStatusCodeException, MalformedURLException, IOException {
@@ -66,7 +65,7 @@ public class SPNewsScraper {
 		}
 		String[] allNews = input.split("\\|\\$\\$\\|");
 		
-		System.out.println("count: " + (allNews.length-1));
+		//System.out.println("count: " + (allNews.length-1));
 		for (int i = 1; i < allNews.length; i++) {
 			String[] singleNews = allNews[i].split("\\|\\$\\|");
 			if(singleNews.length != 11) {
