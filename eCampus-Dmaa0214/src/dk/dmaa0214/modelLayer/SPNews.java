@@ -30,7 +30,11 @@ public class SPNews {
 		this.id = id;
 		this.title = title;
 		this.date = date;
-		this.channels = channels;
+		if (channels != null) {
+			this.channels = channels;
+		} else {
+			this.channels = new ArrayList<String>();
+		}
 		this.text = text;
 		this.addedBy = addedBy;
 		this.read = read;
@@ -63,6 +67,29 @@ public class SPNews {
 	 */
 	public ArrayList<String> getChannels() {
 		return channels;
+	}
+	
+	public String getChannelsAsSingleText() {
+		String text = "None";
+		if (channels.size() > 1) {
+			text = "More channels";
+		} else if (channels.size() == 1) {
+			text = channels.get(0);
+		}
+		return text;
+	}
+	
+	public String getChannelsAsToolTipText() {
+		String text = "";
+		if (channels.size() > 1) {
+			text = channels.toString();
+			text = text.substring(1, text.length() - 1).replace(", ", ",");
+			text = text.replace(",", "<br>");
+			text = "<html>" + text + "</html>";
+		} else if (channels.size() == 1) {
+			text = channels.get(0);
+		}
+		return text;
 	}
 
 	/**

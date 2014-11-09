@@ -26,7 +26,6 @@ import dk.dmaa0214.guiLayer.extensions.FileTreeCellRenderer;
 import dk.dmaa0214.guiLayer.extensions.FileTreeModel;
 import dk.dmaa0214.guiLayer.extensions.JFilePath;
 import dk.dmaa0214.guiLayer.extensions.NewsCellRenderer;
-import dk.dmaa0214.guiLayer.extensions.NewsListCellModel;
 import dk.dmaa0214.modelLayer.SPFolder;
 import dk.dmaa0214.modelLayer.SPNews;
 
@@ -53,6 +52,9 @@ import javax.swing.JList;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import javax.swing.ListSelectionModel;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class SPGUI extends JPanel {
 	/**
@@ -183,12 +185,20 @@ public class SPGUI extends JPanel {
 		panel_10.add(scrollPane_1, "1, 1, fill, fill");
 		
 		newsList = new JList<SPNews>();
+		newsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		newsList.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER && newsList.getSelectedIndex() != -1) {
+					 showNews(newsList.getSelectedValue());
+				}
+			}
+		});
 		newsList.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent arg0) {
-				JList<SPNews> list = (JList<SPNews>) arg0.getSource();
-		        if (arg0.getClickCount() == 2) {
-		            showNews(list.getSelectedValue());
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2 && newsList.getSelectedIndex() != -1) {
+		            showNews(newsList.getSelectedValue());
 		        }
 			}
 		});
@@ -320,46 +330,52 @@ public class SPGUI extends JPanel {
 
 	}
 	
-	protected void showNews(SPNews selectedValue) {
-		//if(selectedValue instanceof SPNews){
-		//SPNews sp = (SPNews) selectedValue;
+	private void showNews(SPNews selectedValue) {
 		try {
 			if(selectedValue.getFullText().isEmpty()) {
 				newsScraper.getSingleNews(selectedValue);
 			}
 		} catch (FailingHttpStatusCodeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (((FailingHttpStatusCodeException) e).getStatusCode() == 401) {
+				showErrorDialog("Login is incorrect");
+			} else {
+				showErrorDialog("HTTP Error code: " +  e.getStatusCode() + ": " + e.getStatusMessage());
+				e.printStackTrace();
+			}
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
+			showErrorDialog("Error: " + e.getMessage()); 
 			e.printStackTrace();
 		} catch (NullPointerException e) {
-			// TODO Auto-generated catch block
+			showErrorDialog(e.getMessage());
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			showErrorDialog("IO-Error: " + e.getMessage());
 			e.printStackTrace();
 		}
+		newsList.clearSelection();
 		NewsDialog newsDia = new NewsDialog(selectedValue);
 		newsDia.setVisible(true);
-		//}
 	}
 
 	private void getNews() {
 		try {
 			newsScraper = new SPNewsScraper(txtUser.getText(), txtPass.getText());
 			updateNewsList(newsScraper.getNewsList());
-		} catch (NullPointerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (FailingHttpStatusCodeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (((FailingHttpStatusCodeException) e).getStatusCode() == 401) {
+				showErrorDialog("Login is incorrect");
+			} else {
+				showErrorDialog("HTTP Error code: " +  e.getStatusCode() + ": " + e.getStatusMessage());
+				e.printStackTrace();
+			}
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
+			showErrorDialog("Error: " + e.getMessage()); 
+			e.printStackTrace();
+		} catch (NullPointerException e) {
+			showErrorDialog(e.getMessage());
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			showErrorDialog("IO-Error: " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -455,6 +471,9 @@ public class SPGUI extends JPanel {
 							} catch (Exception e) {
 								lblStatus.setText("Status: Error");
 							}
+							break;
+						default:
+							System.out.println(evt.getNewValue());
 							break;
 						}
 					}

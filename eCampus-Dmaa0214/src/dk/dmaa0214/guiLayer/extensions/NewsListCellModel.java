@@ -67,7 +67,7 @@ public class NewsListCellModel extends JPanel {
 			new RowSpec[] {
 				FormFactory.DEFAULT_ROWSPEC,}));
 		
-		JLabel lblNewLabel_2 = new JLabel(spNews.getChannels().get(0) + ", " + spNews.getAddedBy());
+		JLabel lblNewLabel_2 = new JLabel(spNews.getChannelsAsSingleText() + ", " + spNews.getAddedBy());
 		panel_3.add(lblNewLabel_2, "1, 1");
 		
 		JLabel lblNewLabel_1 = new JLabel(spNews.getDate());

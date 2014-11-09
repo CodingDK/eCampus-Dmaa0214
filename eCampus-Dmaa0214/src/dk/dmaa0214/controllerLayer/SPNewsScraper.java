@@ -1,15 +1,24 @@
 package dk.dmaa0214.controllerLayer;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import javax.xml.bind.DatatypeConverter;
+
 import com.gargoylesoftware.htmlunit.DefaultCredentialsProvider;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
+import com.gargoylesoftware.htmlunit.StringWebResponse;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.DomNodeList;
+import com.gargoylesoftware.htmlunit.html.HTMLParser;
+import com.gargoylesoftware.htmlunit.html.HtmlElement;
+import com.gargoylesoftware.htmlunit.html.HtmlImage;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+
 import dk.dmaa0214.modelLayer.SPNews;
 
 public class SPNewsScraper {
@@ -17,7 +26,7 @@ public class SPNewsScraper {
 	//public static void main(String [] args) {
 	//	new SPNewsScraper();
 	//}
-	
+
 	private WebClient webClient;
 	
 	public SPNewsScraper(String user, String pass) {		
@@ -28,11 +37,12 @@ public class SPNewsScraper {
 		credentialProvider.addNTLMCredentials(user, pass, null, -1, "localhost", "UCN");
 	}
 
-	public void getSingleNews(SPNews spNews) throws FailingHttpStatusCodeException, MalformedURLException, IOException, NullPointerException {
+	public void getSingleNews(SPNews spNews) throws FailingHttpStatusCodeException, NullPointerException, IOException {
 		int id = spNews.getId();
 		String siteDialogURL = "http://ecampus.ucn.dk/Noticeboard/Lists/NoticeBoard/DispForm.aspx?"
 				+ "NoticeBoardItem=" + id + "&WebID=87441127-db6f-4499-8c99-3dea925e04a8&IsDlg=1";
 		HtmlPage page = webClient.getPage(siteDialogURL);
+		
 		DomNode div = page.getFirstByXPath("//td[@class='wt-2column-t1-td1']/div/div");
 		if(div == null) {
 			throw new NullPointerException("Nyhedstekst kunne ikke hentes. Internkode: #3");
@@ -43,8 +53,31 @@ public class SPNewsScraper {
 			DomNode dn = list.get(i);
 			fullText += dn.asXml();
 		}
-		//System.out.println(fullText);
-		spNews.setFullText(fullText);
+		StringWebResponse response = new StringWebResponse(fullText, page.getUrl());
+		HtmlPage newPage = HTMLParser.parseHtml(response, webClient.getCurrentWindow());
+		
+		makeImgToBase64(newPage);
+				
+		HtmlElement body = newPage.getBody(); 
+		spNews.setFullText(body.asXml());
+	}
+	
+	private void makeImgToBase64(HtmlPage page) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
+		@SuppressWarnings("unchecked")
+		List<HtmlImage> imageList = (List<HtmlImage>) page.getByXPath("//img");
+		
+		for (HtmlImage image : imageList) {
+	    	InputStream ins = webClient.getPage("http://ecampus.ucn.dk" + image.getSrcAttribute()).getWebResponse().getContentAsStream();
+	    	
+	    	byte[] imageBytes = new byte[0];
+    	    for(byte[] ba = new byte[ins.available()]; ins.read(ba) != -1;) {
+    	        byte[] baTmp = new byte[imageBytes.length + ba.length];
+    	        System.arraycopy(imageBytes, 0, baTmp, 0, imageBytes.length);
+    	        System.arraycopy(ba, 0, baTmp, imageBytes.length, ba.length);
+    	        imageBytes = baTmp;
+    	    }
+    	    image.setAttribute("src", "data:image/gif;base64," + DatatypeConverter.printBase64Binary(imageBytes));
+	    }
 	}
 
 	public ArrayList<SPNews> getNewsList() throws NullPointerException, FailingHttpStatusCodeException, MalformedURLException, IOException {
