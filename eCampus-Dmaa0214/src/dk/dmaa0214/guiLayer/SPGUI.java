@@ -44,7 +44,6 @@ import dk.dmaa0214.guiLayer.extensions.FileTreeCellRenderer;
 import dk.dmaa0214.guiLayer.extensions.FileTreeModel;
 import dk.dmaa0214.guiLayer.extensions.JFilePath;
 import dk.dmaa0214.guiLayer.extensions.NewsCellRenderer;
-import dk.dmaa0214.guiLayer.extensions.NewsListCellModel;
 import dk.dmaa0214.modelLayer.SPFolder;
 import dk.dmaa0214.modelLayer.SPNews;
 import dk.dmaa0214.modelLayer.User;
@@ -74,6 +73,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.ItemEvent;
+import javax.swing.ListSelectionModel;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class SPGUI extends JPanel {
 	/**
@@ -100,6 +102,7 @@ public class SPGUI extends JPanel {
 	private String password = "zukowski";
 	private Cipher desCipher;
 	private SecretKey sKey;
+	private SPNewsScraper newsScraper;
 	/**
 	 * Create the panel.
 	 */
@@ -229,12 +232,20 @@ public class SPGUI extends JPanel {
 		panel_10.add(scrollPane_1, "1, 1, fill, fill");
 		
 		newsList = new JList<SPNews>();
+		newsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		newsList.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER && newsList.getSelectedIndex() != -1) {
+					 showNews(newsList.getSelectedValue());
+				}
+			}
+		});
 		newsList.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent arg0) {
-				JList list = (JList)arg0.getSource();
-		        if (arg0.getClickCount() == 2) {
-		            showNews(list.getSelectedValue());
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2 && newsList.getSelectedIndex() != -1) {
+		            showNews(newsList.getSelectedValue());
 		        }
 			}
 		});
@@ -436,29 +447,49 @@ public class SPGUI extends JPanel {
 		}
 	}
 
-	protected void showNews(Object selectedValue) {
-		if(selectedValue instanceof SPNews){
-			SPNews sp = (SPNews) selectedValue;
-			NewsDialog newsDia = new NewsDialog(sp);
-			newsDia.setVisible(true);
+	private void showNews(SPNews selectedValue) {
+		try {
+			if(selectedValue.getFullText().isEmpty()) {
+				newsScraper.getSingleNews(selectedValue);
+			}
+		} catch (FailingHttpStatusCodeException e) {
+			if (((FailingHttpStatusCodeException) e).getStatusCode() == 401) {
+				showErrorDialog("Login is incorrect");
+			} else {
+				showErrorDialog("HTTP Error code: " +  e.getStatusCode() + ": " + e.getStatusMessage());
+				e.printStackTrace();
+			}
+		} catch (MalformedURLException e) {
+			showErrorDialog("Error: " + e.getMessage()); 
+			e.printStackTrace();
+		} catch (NullPointerException e) {
+			showErrorDialog(e.getMessage());
+			e.printStackTrace();
+		} catch (IOException e) {
+			showErrorDialog("IO-Error: " + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
 	private void getNews() {
 		try {
-			SPNewsScraper newsScraper = new SPNewsScraper(txtUser.getText(), txtPass.getText());
+			newsScraper = new SPNewsScraper(txtUser.getText(), txtPass.getText());
 			updateNewsList(newsScraper.getNewsList());
-		} catch (NullPointerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (FailingHttpStatusCodeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (((FailingHttpStatusCodeException) e).getStatusCode() == 401) {
+				showErrorDialog("Login is incorrect");
+			} else {
+				showErrorDialog("HTTP Error code: " +  e.getStatusCode() + ": " + e.getStatusMessage());
+				e.printStackTrace();
+			}
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
+			showErrorDialog("Error: " + e.getMessage()); 
+			e.printStackTrace();
+		} catch (NullPointerException e) {
+			showErrorDialog(e.getMessage());
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			showErrorDialog("IO-Error: " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -554,6 +585,9 @@ public class SPGUI extends JPanel {
 							} catch (Exception e) {
 								lblStatus.setText("Status: Error");
 							}
+							break;
+						default:
+							System.out.println(evt.getNewValue());
 							break;
 						}
 					}
