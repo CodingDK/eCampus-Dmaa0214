@@ -39,13 +39,13 @@ import com.jgoodies.forms.factories.FormFactory;
 
 import dk.dmaa0214.controllerLayer.FileDownloader;
 import dk.dmaa0214.controllerLayer.FileScraper;
-import dk.dmaa0214.controllerLayer.SPNewsScraper;
+//import dk.dmaa0214.controllerLayer.SPNewsScraper;
 import dk.dmaa0214.guiLayer.extensions.FileTreeCellRenderer;
 import dk.dmaa0214.guiLayer.extensions.FileTreeModel;
 import dk.dmaa0214.guiLayer.extensions.JFilePath;
-import dk.dmaa0214.guiLayer.extensions.NewsCellRenderer;
+//import dk.dmaa0214.guiLayer.extensions.NewsCellRenderer;
 import dk.dmaa0214.modelLayer.SPFolder;
-import dk.dmaa0214.modelLayer.SPNews;
+//import dk.dmaa0214.modelLayer.SPNews;
 import dk.dmaa0214.modelLayer.User;
 
 import javax.swing.DefaultListModel;
@@ -97,12 +97,12 @@ public class SPGUI extends JPanel {
 	private JLabel lblStatus;
 	private JPanel statusPan;
 	private JButton btnRun;
-	private JList<SPNews> newsList;
+//	private JList<SPNews> newsList;
 	private JCheckBox chckbxRemember;
 	private String password = "zukowski";
 	private Cipher desCipher;
 	private SecretKey sKey;
-	private SPNewsScraper newsScraper;
+//	private SPNewsScraper newsScraper;
 	/**
 	 * Create the panel.
 	 */
@@ -127,7 +127,7 @@ public class SPGUI extends JPanel {
 				ColumnSpec.decode("240px:grow"),
 				ColumnSpec.decode("160px:grow"),
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
-				ColumnSpec.decode("350px"),
+//				ColumnSpec.decode("350px"),
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,},
 			new RowSpec[] {
 				RowSpec.decode("52px:grow"),
@@ -181,17 +181,17 @@ public class SPGUI extends JPanel {
 		
 		JPanel panel = new JPanel();
 		add(panel, "3, 1, fill, fill");
-		
-		JPanel panel_12 = new JPanel();
-		add(panel_12, "5, 1, fill, fill");
-		
-		JButton btnNews = new JButton("Get news");
-		btnNews.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				getNews();
-			}
-		});
-		panel_12.add(btnNews);
+//		
+//		JPanel panel_12 = new JPanel();
+//		add(panel_12, "5, 1, fill, fill");
+//		
+//		JButton btnNews = new JButton("Get news");
+//		btnNews.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent arg0) {
+//				getNews();
+//			}
+//		});
+//		panel_12.add(btnNews);
 		
 		JPanel panel_6 = new JPanel();
 		add(panel_6, "2, 3, 2, 1, fill, fill");
@@ -221,36 +221,36 @@ public class SPGUI extends JPanel {
 		});
 		panel_6.add(btnBrowser, "5, 1");
 		
-		JPanel panel_10 = new JPanel();
-		add(panel_10, "5, 3, 1, 5, fill, fill");
-		panel_10.setLayout(new FormLayout(new ColumnSpec[] {
-				ColumnSpec.decode("default:grow"),},
-			new RowSpec[] {
-				RowSpec.decode("max(113dlu;default):grow"),}));
-		
-		JScrollPane scrollPane_1 = new JScrollPane();
-		panel_10.add(scrollPane_1, "1, 1, fill, fill");
-		
-		newsList = new JList<SPNews>();
-		newsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		newsList.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ENTER && newsList.getSelectedIndex() != -1) {
-					 showNews(newsList.getSelectedValue());
-				}
-			}
-		});
-		newsList.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() == 2 && newsList.getSelectedIndex() != -1) {
-		            showNews(newsList.getSelectedValue());
-		        }
-			}
-		});
-		newsList.setCellRenderer(new NewsCellRenderer());
-		scrollPane_1.setViewportView(newsList);
+//		JPanel panel_10 = new JPanel();
+//		add(panel_10, "5, 3, 1, 5, fill, fill");
+//		panel_10.setLayout(new FormLayout(new ColumnSpec[] {
+//				ColumnSpec.decode("default:grow"),},
+//			new RowSpec[] {
+//				RowSpec.decode("max(113dlu;default):grow"),}));
+//		
+//		JScrollPane scrollPane_1 = new JScrollPane();
+//		panel_10.add(scrollPane_1, "1, 1, fill, fill");
+//		
+//		newsList = new JList<SPNews>();
+//		newsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+//		newsList.addKeyListener(new KeyAdapter() {
+//			@Override
+//			public void keyReleased(KeyEvent e) {
+//				if (e.getKeyCode() == KeyEvent.VK_ENTER && newsList.getSelectedIndex() != -1) {
+//					 showNews(newsList.getSelectedValue());
+//				}
+//			}
+//		});
+//		newsList.addMouseListener(new MouseAdapter() {
+//			@Override
+//			public void mouseClicked(MouseEvent e) {
+//				if (e.getClickCount() == 2 && newsList.getSelectedIndex() != -1) {
+//		            showNews(newsList.getSelectedValue());
+//		        }
+//			}
+//		});
+//		newsList.setCellRenderer(new NewsCellRenderer());
+//		scrollPane_1.setViewportView(newsList);
 		
 		JPanel panel_2 = new JPanel();
 		add(panel_2, "2, 5, 2, 1, fill, fill");
@@ -447,60 +447,60 @@ public class SPGUI extends JPanel {
 		}
 	}
 
-	private void showNews(SPNews selectedValue) {
-		try {
-			if(selectedValue.getFullText().isEmpty()) {
-				newsScraper.getSingleNews(selectedValue);
-			}
-		} catch (FailingHttpStatusCodeException e) {
-			if (((FailingHttpStatusCodeException) e).getStatusCode() == 401) {
-				showErrorDialog("Login is incorrect");
-			} else {
-				showErrorDialog("HTTP Error code: " +  e.getStatusCode() + ": " + e.getStatusMessage());
-				e.printStackTrace();
-			}
-		} catch (MalformedURLException e) {
-			showErrorDialog("Error: " + e.getMessage()); 
-			e.printStackTrace();
-		} catch (NullPointerException e) {
-			showErrorDialog(e.getMessage());
-			e.printStackTrace();
-		} catch (IOException e) {
-			showErrorDialog("IO-Error: " + e.getMessage());
-			e.printStackTrace();
-		}
-	}
-
-	private void getNews() {
-		try {
-			newsScraper = new SPNewsScraper(txtUser.getText(), txtPass.getText());
-			updateNewsList(newsScraper.getNewsList());
-		} catch (FailingHttpStatusCodeException e) {
-			if (((FailingHttpStatusCodeException) e).getStatusCode() == 401) {
-				showErrorDialog("Login is incorrect");
-			} else {
-				showErrorDialog("HTTP Error code: " +  e.getStatusCode() + ": " + e.getStatusMessage());
-				e.printStackTrace();
-			}
-		} catch (MalformedURLException e) {
-			showErrorDialog("Error: " + e.getMessage()); 
-			e.printStackTrace();
-		} catch (NullPointerException e) {
-			showErrorDialog(e.getMessage());
-			e.printStackTrace();
-		} catch (IOException e) {
-			showErrorDialog("IO-Error: " + e.getMessage());
-			e.printStackTrace();
-		}
-	}
-	
-	private void updateNewsList(ArrayList<SPNews> nList) {
-		DefaultListModel<SPNews> model = new DefaultListModel<SPNews>();
-		for (SPNews n : nList) {
-			model.addElement(n);
-		}
-		newsList.setModel(model);
-	}
+//	private void showNews(SPNews selectedValue) {
+//		try {
+//			if(selectedValue.getFullText().isEmpty()) {
+//				newsScraper.getSingleNews(selectedValue);
+//			}
+//		} catch (FailingHttpStatusCodeException e) {
+//			if (((FailingHttpStatusCodeException) e).getStatusCode() == 401) {
+//				showErrorDialog("Login is incorrect");
+//			} else {
+//				showErrorDialog("HTTP Error code: " +  e.getStatusCode() + ": " + e.getStatusMessage());
+//				e.printStackTrace();
+//			}
+//		} catch (MalformedURLException e) {
+//			showErrorDialog("Error: " + e.getMessage()); 
+//			e.printStackTrace();
+//		} catch (NullPointerException e) {
+//			showErrorDialog(e.getMessage());
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			showErrorDialog("IO-Error: " + e.getMessage());
+//			e.printStackTrace();
+//		}
+//	}
+//
+//	private void getNews() {
+//		try {
+//			newsScraper = new SPNewsScraper(txtUser.getText(), txtPass.getText());
+//			updateNewsList(newsScraper.getNewsList());
+//		} catch (FailingHttpStatusCodeException e) {
+//			if (((FailingHttpStatusCodeException) e).getStatusCode() == 401) {
+//				showErrorDialog("Login is incorrect");
+//			} else {
+//				showErrorDialog("HTTP Error code: " +  e.getStatusCode() + ": " + e.getStatusMessage());
+//				e.printStackTrace();
+//			}
+//		} catch (MalformedURLException e) {
+//			showErrorDialog("Error: " + e.getMessage()); 
+//			e.printStackTrace();
+//		} catch (NullPointerException e) {
+//			showErrorDialog(e.getMessage());
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			showErrorDialog("IO-Error: " + e.getMessage());
+//			e.printStackTrace();
+//		}
+//	}
+//	
+//	private void updateNewsList(ArrayList<SPNews> nList) {
+//		DefaultListModel<SPNews> model = new DefaultListModel<SPNews>();
+//		for (SPNews n : nList) {
+//			model.addElement(n);
+//		}
+//		newsList.setModel(model);
+//	}
 
 	private void downloadSelected() {
 		btnDownload.setEnabled(false);
