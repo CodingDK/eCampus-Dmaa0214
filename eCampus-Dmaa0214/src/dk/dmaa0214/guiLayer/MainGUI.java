@@ -1,5 +1,6 @@
 package dk.dmaa0214.guiLayer;
 
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.io.File;
 
@@ -8,9 +9,9 @@ import javax.swing.JFrame;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileSystemView;
 
-public class MainGUI {
+public class MainGUI extends JFrame {
 
-	private JFrame frame;
+	private static final long serialVersionUID = 1L;
 	private static final String title = "eCampus Gateway V0.06";
 
 	/**
@@ -31,7 +32,7 @@ public class MainGUI {
 			public void run() {
 				try {
 					MainGUI window = new MainGUI();
-					window.frame.setVisible(true);
+					window.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -50,11 +51,12 @@ public class MainGUI {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-		frame = new JFrame();
-		frame.setBounds(100, 100, 488, 412);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setContentPane(new SPGUI());
-		frame.setTitle(title);
+		setBounds(100, 100, 488, 412);
+		setMinimumSize(new Dimension(500, 420));
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		SPGUI spGUI = new SPGUI(this);
+		setContentPane(spGUI);
+		setTitle(title);
 	}
-
+	
 }

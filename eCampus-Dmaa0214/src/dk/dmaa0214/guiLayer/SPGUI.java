@@ -33,6 +33,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker.StateValue;
 import javax.swing.border.TitledBorder;
 import javax.swing.tree.TreePath;
@@ -73,11 +74,14 @@ public class SPGUI extends JPanel {
 	private JPanel statusPan;
 	private JButton btnRun;
 	private Settings settings;
+	private MainGUI parent;
 //	private SPNewsScraper newsScraper;
 	/**
 	 * Create the panel.
+	 * @param frame 
 	 */
-	public SPGUI() {		
+	public SPGUI(MainGUI mainGUI) {	
+		parent = mainGUI;
 		siteURL = "http://ecampus.ucn.dk";
 		sitePath = "/my-ecampus/holdsites/ec-dmaa0214/Materiale/";
 		
@@ -348,14 +352,25 @@ public class SPGUI extends JPanel {
 		progressBar = new JProgressBar();
 		panel_9.add(progressBar, BorderLayout.CENTER);
 		progressBar.setStringPainted(true);
-
+				
+		parent.getRootPane().setDefaultButton(btnRun);
+		
 		loadSettings();
 	}
 
 	private void loadSettings(){
 		settings = SettingsCtr.loadSettings();
 		if (settings != null) {
-			txtUser.setText(settings.getUsername());
+			String username = settings.getUsername();
+			if (username != null && !username.isEmpty()) {
+				txtUser.setText(username);
+				
+				SwingUtilities.invokeLater( new Runnable() { 
+					public void run() { 
+					        txtPass.requestFocus(); 
+					    } 
+					} );
+			}
 			txtLocalPath.setText(settings.getLocalPath());
 			txtSPPath.setText(settings.getSitePath());
 		} //else {

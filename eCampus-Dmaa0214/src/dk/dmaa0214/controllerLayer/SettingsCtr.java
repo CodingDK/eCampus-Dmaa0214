@@ -35,7 +35,6 @@ public class SettingsCtr {
 			
 			ret = new Settings();
 			ret.setUsername(prefs.get("username", null));
-			System.out.println("local: "+ prefs.get("localpath", null));
 			ret.setLocalPath(prefs.get("localpath", null));
 			ret.setSitePath(prefs.get("sitepath", null));
 			
