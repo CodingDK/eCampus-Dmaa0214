@@ -11,6 +11,7 @@ import javax.swing.filechooser.FileSystemView;
 public class MainGUI {
 
 	private JFrame frame;
+	private static final String title = "eCampus Gateway V0.06";
 
 	/**
 	 * Launch the application.
@@ -53,7 +54,7 @@ public class MainGUI {
 		frame.setBounds(100, 100, 488, 412);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setContentPane(new SPGUI());
-		frame.setTitle("eCampus Gateway V0.04");
+		frame.setTitle(title);
 	}
 
 }

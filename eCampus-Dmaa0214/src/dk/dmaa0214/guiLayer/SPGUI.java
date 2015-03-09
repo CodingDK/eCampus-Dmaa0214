@@ -46,8 +46,7 @@ import java.awt.BorderLayout;
 
 import javax.swing.SwingConstants;
 import javax.swing.JProgressBar;
-import java.awt.event.ItemListener;
-import java.awt.event.ItemEvent;
+
 import java.awt.FlowLayout;
 
 public class SPGUI extends JPanel {
@@ -55,6 +54,9 @@ public class SPGUI extends JPanel {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
+	private static final String spPathOrg = "3. Semester";
+	private static final String localPathOrg = "D:\\3. Semester";
 	private JTextField txtUser;
 	private JTextField txtPass;
 	private JTextField txtLocalPath;
@@ -70,15 +72,12 @@ public class SPGUI extends JPanel {
 	private JLabel lblStatus;
 	private JPanel statusPan;
 	private JButton btnRun;
-//	private JList<SPNews> newsList;
-	private JCheckBox chckbxRemember;
 	private Settings settings;
 //	private SPNewsScraper newsScraper;
 	/**
 	 * Create the panel.
 	 */
-	public SPGUI() {
-		
+	public SPGUI() {		
 		siteURL = "http://ecampus.ucn.dk";
 		sitePath = "/my-ecampus/holdsites/ec-dmaa0214/Materiale/";
 		
@@ -106,9 +105,7 @@ public class SPGUI extends JPanel {
 		panel_1.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.DEFAULT_COLSPEC,
 				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("max(88dlu;default)"),
-				FormFactory.RELATED_GAP_COLSPEC,
-				ColumnSpec.decode("default:grow"),},
+				ColumnSpec.decode("max(88dlu;default)"),},
 			new RowSpec[] {
 				FormFactory.LINE_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
@@ -129,15 +126,8 @@ public class SPGUI extends JPanel {
 		panel_1.add(txtPass, "3, 4, fill, default");
 		txtPass.setColumns(10);
 		
-		chckbxRemember = new JCheckBox("Remember");
-		chckbxRemember.addItemListener(new ItemListener() {
-			public void itemStateChanged(ItemEvent arg0) {
-				pressedSave();
-			}
-		});
-		panel_1.add(chckbxRemember, "5, 4");
-		
 		JPanel panel = new JPanel();
+		panel.setBorder(new TitledBorder(null, "Settings", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		add(panel, "3, 1, fill, fill");
 		panel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		
@@ -149,7 +139,16 @@ public class SPGUI extends JPanel {
 		});
 		panel.add(btnSave);
 		
+		JButton btnDelete = new JButton("Delete");
+		btnDelete.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				deleteSettings();
+			}
+		});
+		panel.add(btnDelete);
+		
 		JButton btnLoad = new JButton("Load");
+		btnLoad.setVisible(false);
 		btnLoad.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				loadSettings();
@@ -183,7 +182,7 @@ public class SPGUI extends JPanel {
 		panel_6.add(lblLocalPath, "1, 1, right, default");
 		
 		txtLocalPath = new JFilePath();
-		txtLocalPath.setText("D:\\ITIO");
+		txtLocalPath.setText(localPathOrg);
 		panel_6.add(txtLocalPath, "3, 1, fill, default");
 		txtLocalPath.setColumns(10);
 		
@@ -244,7 +243,7 @@ public class SPGUI extends JPanel {
 		panel_2.add(lblNewLabel_2, "1, 1, right, default");
 		
 		txtSPPath = new JTextField();
-		txtSPPath.setText("2. Semester/ITIO");
+		txtSPPath.setText(spPathOrg);
 		panel_2.add(txtSPPath, "3, 1, 5, 1, fill, default");
 		txtSPPath.setColumns(10);
 		
@@ -352,38 +351,36 @@ public class SPGUI extends JPanel {
 
 		loadSettings();
 	}
-	
-	private void pressedSave() {
-		if(chckbxRemember.isSelected()) {
-			saveSettings();
-		} else {
-			deleteSettings();
-		}
-	}
 
-	protected void loadSettings(){
-		System.out.println("Load: " + settings);
-		settings = SettingsCtr.loadUser();
+	private void loadSettings(){
+		settings = SettingsCtr.loadSettings();
 		if (settings != null) {
 			txtUser.setText(settings.getUsername());
-			txtPass.setText(settings.getPassword());
-		}
-		System.out.println("Load: " + settings);
-		System.out.println("Load runit");
+			txtLocalPath.setText(settings.getLocalPath());
+			txtSPPath.setText(settings.getSitePath());
+		} //else {
+			//JOptionPane.showMessageDialog(this, "Sorry, Settings can't be loaded :(", "Error", JOptionPane.ERROR_MESSAGE);
+		//}
 	}
 	
-	protected void saveSettings() {
-		if (settings == null) {
-			settings = new Settings(txtUser.getText(), txtPass.getText());
-		}		
-		System.out.println("save: " + settings.getUsername());
-		SettingsCtr.saveSettings(settings);
-		System.out.println("save runit");
+	private void saveSettings() {
+		settings = new Settings(txtUser.getText(), null, txtLocalPath.getText(), txtSPPath.getText());
+		boolean saved = SettingsCtr.saveSettings(settings);
+		if (saved) {
+			JOptionPane.showMessageDialog(this, "Settings saved");
+		} else {
+			JOptionPane.showMessageDialog(this, "Sorry, Settings can't be saved :(", "Error", JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
-	protected void deleteSettings() {
+	private void deleteSettings() {
 		settings = null;
-		SettingsCtr.deleteSettings();
+		boolean deleted = SettingsCtr.deleteSettings();
+		if (deleted) {
+			JOptionPane.showMessageDialog(this, "Settings deleted");
+		} else {
+			JOptionPane.showMessageDialog(this, "Sorry, Settings can't be deleted, maybe they already gone", "Error", JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 //	private void showNews(SPNews selectedValue) {

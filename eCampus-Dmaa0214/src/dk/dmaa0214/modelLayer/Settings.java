@@ -13,9 +13,11 @@ public class Settings implements Serializable{
 		
 	}
 	
-	public Settings(String username, String password){
+	public Settings(String username, String password, String localPath, String sitePath){
 		this.username = username;
 		this.password = password;
+		this.localPath = localPath;
+		this.sitePath = sitePath;
 	}
 
 	/**
