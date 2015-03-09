@@ -1,12 +1,5 @@
 package dk.dmaa0214.guiLayer;
 
-import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.DESKeySpec;
 import javax.swing.JPanel;
 import javax.swing.JTree;
 
@@ -14,24 +7,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.MalformedURLException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 
 import javax.swing.JScrollPane;
 
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.RowSpec;
@@ -39,6 +18,7 @@ import com.jgoodies.forms.factories.FormFactory;
 
 import dk.dmaa0214.controllerLayer.FileDownloader;
 import dk.dmaa0214.controllerLayer.FileScraper;
+import dk.dmaa0214.controllerLayer.SettingsCtr;
 //import dk.dmaa0214.controllerLayer.SPNewsScraper;
 import dk.dmaa0214.guiLayer.extensions.FileTreeCellRenderer;
 import dk.dmaa0214.guiLayer.extensions.FileTreeModel;
@@ -46,9 +26,8 @@ import dk.dmaa0214.guiLayer.extensions.JFilePath;
 //import dk.dmaa0214.guiLayer.extensions.NewsCellRenderer;
 import dk.dmaa0214.modelLayer.SPFolder;
 //import dk.dmaa0214.modelLayer.SPNews;
-import dk.dmaa0214.modelLayer.User;
+import dk.dmaa0214.modelLayer.Settings;
 
-import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
@@ -67,15 +46,9 @@ import java.awt.BorderLayout;
 
 import javax.swing.SwingConstants;
 import javax.swing.JProgressBar;
-import javax.swing.JList;
-
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.ItemEvent;
-import javax.swing.ListSelectionModel;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.FlowLayout;
 
 public class SPGUI extends JPanel {
 	/**
@@ -99,25 +72,12 @@ public class SPGUI extends JPanel {
 	private JButton btnRun;
 //	private JList<SPNews> newsList;
 	private JCheckBox chckbxRemember;
-	private String password = "zukowski";
-	private Cipher desCipher;
-	private SecretKey sKey;
+	private Settings settings;
 //	private SPNewsScraper newsScraper;
 	/**
 	 * Create the panel.
 	 */
 	public SPGUI() {
-		try {
-			byte key[] = password.getBytes();
-		    DESKeySpec desKeySpec = new DESKeySpec(key);
-		    SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DES");
-		    sKey = keyFactory.generateSecret(desKeySpec);
-
-		    // Create Cipher
-		    desCipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
-		} catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException e) {
-			e.printStackTrace();
-		}
 		
 		siteURL = "http://ecampus.ucn.dk";
 		sitePath = "/my-ecampus/holdsites/ec-dmaa0214/Materiale/";
@@ -172,15 +132,30 @@ public class SPGUI extends JPanel {
 		chckbxRemember = new JCheckBox("Remember");
 		chckbxRemember.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent arg0) {
-				if(chckbxRemember.isSelected()){
-					deleteSerial();
-				}
+				pressedSave();
 			}
 		});
 		panel_1.add(chckbxRemember, "5, 4");
 		
 		JPanel panel = new JPanel();
 		add(panel, "3, 1, fill, fill");
+		panel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+		
+		JButton btnSave = new JButton("Save");
+		btnSave.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				saveSettings();
+			}
+		});
+		panel.add(btnSave);
+		
+		JButton btnLoad = new JButton("Load");
+		btnLoad.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				loadSettings();
+			}
+		});
+		panel.add(btnLoad);
 //		
 //		JPanel panel_12 = new JPanel();
 //		add(panel_12, "5, 1, fill, fill");
@@ -321,9 +296,6 @@ public class SPGUI extends JPanel {
 		btnRun = new JButton("Synchronize");
 		btnRun.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if(chckbxRemember.isSelected()){
-					serializeUser();
-				}
 				CardLayout cl = (CardLayout) statusPan.getLayout();
 				cl.show(statusPan, "StatusLabel");
 				getFileList();
@@ -378,73 +350,40 @@ public class SPGUI extends JPanel {
 		panel_9.add(progressBar, BorderLayout.CENTER);
 		progressBar.setStringPainted(true);
 
-		loadUser();
+		loadSettings();
 	}
 	
-	protected void loadUser(){
-		File f = new File("usr.bin");
-		if(f.exists()){
-			try {
-				desCipher.init(Cipher.DECRYPT_MODE, sKey);
-				
-				FileInputStream fs = new FileInputStream(f);
-				BufferedInputStream bis = new BufferedInputStream(fs);
-			    CipherInputStream cis = new CipherInputStream(bis, desCipher);
-				ObjectInputStream ois = new ObjectInputStream(cis);
-				User usr = (User) ois.readObject();
-				
-				ois.close();
-				
-				txtUser.setText(usr.getUsername());
-				txtPass.setText(usr.getPassword());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (InvalidKeyException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+	private void pressedSave() {
+		if(chckbxRemember.isSelected()) {
+			saveSettings();
+		} else {
+			deleteSettings();
 		}
-	}
-	
-	/**
-	 * desCipher.init(Cipher.ENCRYPT_MODE, secretKey);
-
-    // Create stream
-    FileOutputStream fos = new FileOutputStream("out.des");
-    BufferedOutputStream bos = new BufferedOutputStream(fos);
-    CipherOutputStream cos = new CipherOutputStream(bos, desCipher);
-    ObjectOutputStream oos = new ObjectOutputStream(cos);
-	 */
-	
-	protected void serializeUser() {
-		if(!txtUser.getText().isEmpty() && !txtPass.getText().isEmpty()){
-			try {
-				desCipher.init(Cipher.ENCRYPT_MODE, sKey);
-				User usr = new User(txtUser.getText(), txtPass.getText());
-				File f = new File("usr.bin");
-				FileOutputStream fs = new FileOutputStream(f);
-				BufferedOutputStream bos = new BufferedOutputStream(fs);
-				CipherOutputStream cos = new CipherOutputStream(bos, desCipher);
-				ObjectOutputStream oos = new ObjectOutputStream(cos);
-				oos.writeObject(usr);
-				oos.close();
-			} catch (IOException | InvalidKeyException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
 	}
 
-	protected void deleteSerial() {
-		File f = new File("usr.bin");
-		if(f.exists()){
-			f.delete();
+	protected void loadSettings(){
+		System.out.println("Load: " + settings);
+		settings = SettingsCtr.loadUser();
+		if (settings != null) {
+			txtUser.setText(settings.getUsername());
+			txtPass.setText(settings.getPassword());
 		}
+		System.out.println("Load: " + settings);
+		System.out.println("Load runit");
+	}
+	
+	protected void saveSettings() {
+		if (settings == null) {
+			settings = new Settings(txtUser.getText(), txtPass.getText());
+		}		
+		System.out.println("save: " + settings.getUsername());
+		SettingsCtr.saveSettings(settings);
+		System.out.println("save runit");
+	}
+
+	protected void deleteSettings() {
+		settings = null;
+		SettingsCtr.deleteSettings();
 	}
 
 //	private void showNews(SPNews selectedValue) {
