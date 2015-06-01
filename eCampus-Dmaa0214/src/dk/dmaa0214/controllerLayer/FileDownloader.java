@@ -94,10 +94,17 @@ public class FileDownloader extends SwingWorker<Void, SPFile> {
 		String shortPath = spFile.getShortPath();
 		String path = spFile.getPath();	
 		
+		if(!localPath.endsWith("/")){
+			localPath += "/";
+		}
 		
 		if(siteURL == null) {
 			throw new NullPointerException("Du skal sammenligne filer først");
 		}
+		
+		System.out.println(shortPath);
+		System.out.println(path);
+		System.out.println(localPath + shortPath);
 		
 		File localFile = new File(localPath + shortPath);
 	    InputStream ins = webClient.getPage(siteURL + path).getWebResponse().getContentAsStream();

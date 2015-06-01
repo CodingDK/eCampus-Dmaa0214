@@ -70,6 +70,11 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 		if (sitePath.length() > 0 && sitePath.charAt(sitePath.length()-1)=='/') {
 			sitePath = sitePath.substring(0, sitePath.length()-1);
 		}
+		
+		if(sitePath.contains("Forms")){	
+			sitePath = sitePath.substring(0, sitePath.indexOf("Forms")-1);
+		}
+		
 		String[] rootName = sitePath.split("/");
 		
 		root = new SPFolder(rootName[rootName.length-1]);
@@ -78,6 +83,7 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 		webClient.getOptions().setCssEnabled(false);
 		DefaultCredentialsProvider credentialProvider = (DefaultCredentialsProvider) webClient.getCredentialsProvider();
 		credentialProvider.addNTLMCredentials(user, pass, null, -1, "localhost", "UCN");
+		System.out.println("Before Load Line 81: " + siteURL + sitePath);
 	    HtmlPage page = webClient.getPage(siteURL + sitePath);
 	    getFilesOnPage(page, root);
 	    
@@ -122,7 +128,7 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 	    				if(href.equals("")) {
 	    					throw new NullPointerException("Error in reading from site. errorcode: 2");
 	    				}
-	    				else if(href.contains("Forms/AllItems.aspx?")) {
+	    				else if(href.contains("Forms/AllItems.aspx?") && href.contains("RootFolder=")) {
 
 	    					href = href.substring(href.indexOf("RootFolder=")+11,href.indexOf("&FolderCTID"));
 	    					href = URLDecoder.decode(href, "UTF-8");
@@ -138,6 +144,8 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 	    			}
 				}
 	    		if(href != null) {
+	    			System.out.println(href);
+	    			System.out.println(sitePath);
 	    			if(isFolder){
 	    				SPFolder spFolder = new SPFolder(sitePath, name, href, addedBy, changedTime, parent);
 		    			parent.addChild(spFolder);
@@ -153,11 +161,15 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 	}
 
 	private boolean hasLocalFile(String path) {
+		if(!localPath.endsWith("/")){
+			localPath += "/";
+		}
 		boolean retVal = true;
 		File file = new File(localPath + path);
 		if(!file.exists()) {
 			retVal = false;
-			System.out.println("test: " + file.getParentFile().exists());
+			System.out.println("HasLocalFile test: " + file.getParentFile().exists());
+			System.out.println("HasLocalFile " + path);
 		} else if(checkMD5) {
 			if(!file.isDirectory()){
 				System.out.println("Comparing MD5");
@@ -171,7 +183,12 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 					md5Local = org.apache.commons.codec.digest.DigestUtils.md5Hex(localFile);
 					localFile.close();
 					
-					InputStream externalFile = webClient.getPage(siteURL + sitePath + path).getWebResponse().getContentAsStream();
+					String externalFilePath = siteURL + sitePath;
+					if(!externalFilePath.endsWith("/")){
+						externalFilePath += "/";
+					}
+					
+					InputStream externalFile = webClient.getPage(externalFilePath + path).getWebResponse().getContentAsStream();
 					md5External = org.apache.commons.codec.digest.DigestUtils.md5Hex(externalFile);
 					externalFile.close();
 				} catch (IOException e) {
@@ -201,7 +218,7 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 	private void getChildren(SPFolder s) throws FailingHttpStatusCodeException, MalformedURLException, IOException {
 		publish("Fetching child nodes - " + ((SPFolder) s).getName());
 		spFolderCont.addFile(s);
-		System.out.println(s.getPath());
+		System.out.println(siteURL + s.getPath());
 		HtmlPage page = webClient.getPage(siteURL + s.getPath());
 		getFilesOnPage(page, s);
 		ArrayList<Object> children = s.getChildNodes();
@@ -219,6 +236,7 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 		try{
 			get();
 		} catch(ExecutionException ex) {
+			ex.printStackTrace();
 			Throwable e = ex.getCause();
 			if(e instanceof FailingHttpStatusCodeException){
 				if (((FailingHttpStatusCodeException) e).getStatusCode() == 401) {

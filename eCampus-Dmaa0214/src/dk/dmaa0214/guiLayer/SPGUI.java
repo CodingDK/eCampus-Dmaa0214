@@ -44,11 +44,19 @@ import javax.swing.event.TreeSelectionEvent;
 
 import java.awt.CardLayout;
 import java.awt.BorderLayout;
+import java.awt.Cursor;
+import java.awt.FileDialog;
 
 import javax.swing.SwingConstants;
 import javax.swing.JProgressBar;
 
 import java.awt.FlowLayout;
+
+import javax.swing.JComboBox;
+
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.SystemColor;
 
 public class SPGUI extends JPanel {
 	/**
@@ -82,15 +90,14 @@ public class SPGUI extends JPanel {
 	 */
 	public SPGUI(MainGUI mainGUI) {	
 		parent = mainGUI;
-		siteURL = "http://ecampus.ucn.dk";
-		sitePath = "/my-ecampus/holdsites/ec-dmaa0214/Materiale/";
+		siteURL = "http://ecampus.ucn.dk/";
+		sitePath = "my-ecampus/holdsites/";
 		
 		setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
 				ColumnSpec.decode("240px:grow"),
 				ColumnSpec.decode("160px:grow"),
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
-//				ColumnSpec.decode("350px"),
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,},
 			new RowSpec[] {
 				RowSpec.decode("52px:grow"),
@@ -98,7 +105,7 @@ public class SPGUI extends JPanel {
 				RowSpec.decode("26px:grow"),
 				FormFactory.RELATED_GAP_ROWSPEC,
 				RowSpec.decode("26px"),
-				FormFactory.LINE_GAP_ROWSPEC,
+				RowSpec.decode("default:grow"),
 				RowSpec.decode("212px:grow"),
 				FormFactory.RELATED_GAP_ROWSPEC,
 				RowSpec.decode("26px"),
@@ -243,13 +250,59 @@ public class SPGUI extends JPanel {
 			new RowSpec[] {
 				RowSpec.decode("26px"),}));
 		
-		JLabel lblNewLabel_2 = new JLabel("http://ecampus.ucn.dk/.../Materiale/");
+		JLabel lblNewLabel_2 = new JLabel("http://ecampus.ucn.dk/.../holdsites/");
 		panel_2.add(lblNewLabel_2, "1, 1, right, default");
 		
 		txtSPPath = new JTextField();
 		txtSPPath.setText(spPathOrg);
 		panel_2.add(txtSPPath, "3, 1, 5, 1, fill, default");
 		txtSPPath.setColumns(10);
+		
+		JPanel panel_10 = new JPanel();
+		add(panel_10, "2, 6, fill, fill");
+		panel_10.setLayout(new FormLayout(new ColumnSpec[] {
+				FormFactory.MIN_COLSPEC,
+				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
+				FormFactory.MIN_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.MIN_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"),},
+			new RowSpec[] {
+				FormFactory.NARROW_LINE_GAP_ROWSPEC,
+				RowSpec.decode("14px"),
+				FormFactory.NARROW_LINE_GAP_ROWSPEC,}));
+		
+		JLabel lblExpand = new JLabel("Expand");
+		lblExpand.setForeground(SystemColor.textHighlight);
+		lblExpand.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				expandAllNodes();
+			}
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				e.getComponent().setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			}
+		});
+		panel_10.add(lblExpand, "1, 2, left, top");
+		
+		JLabel label = new JLabel("/");
+		panel_10.add(label, "3, 2");
+		
+		JLabel lblCollapse = new JLabel("Collapse");
+		lblCollapse.setForeground(SystemColor.textHighlight);
+		lblCollapse.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				collapseAllNodes();
+			}
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				e.getComponent().setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			}
+		});
+		panel_10.add(lblCollapse, "5, 2");
 		
 		JScrollPane scrollPane = new JScrollPane();
 		add(scrollPane, "2, 7, fill, fill");
@@ -271,7 +324,7 @@ public class SPGUI extends JPanel {
 		scrollPane.setViewportView(tree);
 		
 		JPanel panel_3 = new JPanel();
-		add(panel_3, "3, 7, fill, fill");
+		add(panel_3, "3, 6, 1, 2, fill, fill");
 		panel_3.setLayout(new FormLayout(new ColumnSpec[] {
 				FormFactory.RELATED_GAP_COLSPEC,
 				ColumnSpec.decode("default:grow"),},
@@ -516,6 +569,11 @@ public class SPGUI extends JPanel {
 		} else if(localPath.isEmpty()) {
 			showErrorDialog("Lokal sti må ikke være tom");
 		} else {
+			if(sitePathTxt.contains("holdsites")){
+				sitePathTxt = sitePathTxt.substring(sitePathTxt.lastIndexOf("holdsites")+"holdsites".length());
+				System.out.println(sitePathTxt);
+			}
+			
 			if(sitePathTxt.trim().substring(0, 1).equals("/")) {
 				sitePathTxt = sitePathTxt.trim().substring(1);
 			}
@@ -558,6 +616,12 @@ public class SPGUI extends JPanel {
         }
     }
     
+    private void collapseAllNodes(){
+        for(int i=0;i<tree.getRowCount();++i){
+            tree.collapseRow(i);
+        }
+    }
+    
     private void clearTree() {
     	model = new FileTreeModel(null);
     	tree.setModel(model);
@@ -566,7 +630,7 @@ public class SPGUI extends JPanel {
 	public void reloadTree(){
     	model = new FileTreeModel(root);
     	tree.setModel(model);
-		expandAllNodes();
+    	collapseAllNodes();
     }
 
 }
