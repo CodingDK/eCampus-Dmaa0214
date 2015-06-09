@@ -558,6 +558,9 @@ public class SPGUI extends JPanel {
 	}
 
 	private void getFileList() {
+		System.out.println("Method: getFileList");
+		System.out.println(txtSPPath.getText());
+		
 		final String user = txtUser.getText(); 
 		final String pass = txtPass.getText();
 		final String localPath = txtLocalPath.getText();
@@ -569,14 +572,20 @@ public class SPGUI extends JPanel {
 		} else if(localPath.isEmpty()) {
 			showErrorDialog("Lokal sti må ikke være tom");
 		} else {
+			
 			if(sitePathTxt.contains("holdsites")){
 				sitePathTxt = sitePathTxt.substring(sitePathTxt.lastIndexOf("holdsites")+"holdsites".length());
 				System.out.println(sitePathTxt);
 			}
 			
+			if(sitePathTxt.contains("SitePages")){
+				sitePathTxt = sitePathTxt.substring(0, sitePathTxt.lastIndexOf("SitePages"));
+			}
+			
 			if(sitePathTxt.trim().substring(0, 1).equals("/")) {
 				sitePathTxt = sitePathTxt.trim().substring(1);
 			}
+			
 			clearTree();
 			final FileScraper fs = new FileScraper(user, pass, localPath, siteURL, sitePath + sitePathTxt, chkMD5.isSelected(), lblStatus);
 			fs.addPropertyChangeListener(new PropertyChangeListener() {

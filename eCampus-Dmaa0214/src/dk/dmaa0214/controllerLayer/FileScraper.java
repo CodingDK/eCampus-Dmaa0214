@@ -102,6 +102,7 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 	}
 	
 	private int getFilesOnPage(HtmlPage page, SPFolder parent) throws UnsupportedEncodingException {
+		System.out.println("Method: getFilesOnPage");
 		int retInt = 0;
 		if(parent == null){
 			parent = root;
@@ -128,7 +129,7 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 	    				if(href.equals("")) {
 	    					throw new NullPointerException("Error in reading from site. errorcode: 2");
 	    				}
-	    				else if(href.contains("Forms/AllItems.aspx?") && href.contains("RootFolder=")) {
+	    				else if(href.contains("RootFolder=")) {
 
 	    					href = href.substring(href.indexOf("RootFolder=")+11,href.indexOf("&FolderCTID"));
 	    					href = URLDecoder.decode(href, "UTF-8");
@@ -144,8 +145,14 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 	    			}
 				}
 	    		if(href != null) {
-	    			System.out.println(href);
-	    			System.out.println(sitePath);
+	    			
+	    			if(href.startsWith("/")){
+	    				href = href.substring(1);
+	    			}
+	    			
+	    			System.out.println("Line: 148");
+	    			System.out.println("Href: " + href);
+	    			System.out.println("SitePath: " + sitePath);
 	    			if(isFolder){
 	    				SPFolder spFolder = new SPFolder(sitePath, name, href, addedBy, changedTime, parent);
 		    			parent.addChild(spFolder);
@@ -161,21 +168,26 @@ public class FileScraper extends SwingWorker<SPFolder, String> {
 	}
 
 	private boolean hasLocalFile(String path) {
+		System.out.println("Method: hasLocalFile");
+		System.out.println("LocalPath: " + localPath);
+		System.out.println("Path: " + path);
+		
 		if(!localPath.endsWith("/")){
 			localPath += "/";
 		}
+		
 		boolean retVal = true;
 		File file = new File(localPath + path);
 		if(!file.exists()) {
 			retVal = false;
-			System.out.println("HasLocalFile test: " + file.getParentFile().exists());
-			System.out.println("HasLocalFile " + path);
+			System.out.println("HasLocalFile: " + file.getParentFile().exists());
+			//System.out.println("HasLocalFile " + path);
 		} else if(checkMD5) {
 			if(!file.isDirectory()){
-				System.out.println("Comparing MD5");
+				//System.out.println("Comparing MD5");
 				publish("Comparing MD5");
-				System.out.println(file);
-				System.out.println(siteURL + sitePath + path);
+				//System.out.println(file);
+				//System.out.println(siteURL + sitePath + path);
 				String md5Local = "";
 				String md5External = "";
 				try {
